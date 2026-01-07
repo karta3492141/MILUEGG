@@ -555,9 +555,18 @@
                 flex: none;
             }
 
+            /* Critical Fix: specific disable of hover grayscale on mobile */
+            .project-image-box img {
+                filter: grayscale(0) !important;
+                /* Always colored, GSAP handles opacity */
+                transform: scale(1) !important;
+                /* Disable hover zoom effect on mobile if present */
+            }
+
             .project-content {
                 flex: none;
                 width: 100%;
+                max-width: none;
                 text-align: left;
             }
 
