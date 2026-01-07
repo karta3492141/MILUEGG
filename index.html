@@ -714,10 +714,10 @@
 
         document.querySelectorAll('.project-item').forEach((item) => {
             // Config based on device
-            const scrubValue = isMobile ? 0.5 : 1.5; // Responsive scrub
-            const startScale = isMobile ? 0.85 : 0.65; // Balanced scaling for mobile
+            const scrubValue = isMobile ? 0.2 : 1.5; // Very tight response on mobile to remove "delay" feel
+            const startScale = isMobile ? 0.85 : 0.65;
             const triggerStart = isMobile ? "top 85%" : "top bottom";
-            const triggerEnd = isMobile ? "bottom 10%" : "bottom top"; // End only when almost fully left
+            const triggerEnd = isMobile ? "bottom 10%" : "bottom top";
 
             // Clear any CSS set props to ensure GSAP clean start
             gsap.set(item, { clearProps: "all" });
@@ -732,13 +732,13 @@
             });
 
             if (isMobile) {
-                // Mobile: Staggered (Enlarge FIRST, then Brighten)
+                // Mobile: Snappy Stagger (Fast Grow -> Snap to Bright)
                 tl.fromTo(item,
                     { scale: startScale, opacity: 0.2 },
-                    { scale: 1, opacity: 0.2, duration: 0.3, ease: "power1.out" } // Step 1: Grow
+                    { scale: 1, opacity: 0.2, duration: 0.25, ease: "power1.out" } // Step 1: Fast Grow
                 )
                     .to(item,
-                        { opacity: 1, duration: 0.3, ease: "power1.out" } // Step 2: Brighten
+                        { opacity: 1, duration: 0.15, ease: "none" } // Step 2: Snap Brightness (Almost instant)
                     );
             } else {
                 // Desktop: Simultaneous (Grow & Brighten together)
@@ -748,7 +748,7 @@
                 );
             }
 
-            // Common Exit (Fade out & Shrink after hold)
+            // Common Exit
             tl.to(item,
                 { scale: startScale, opacity: 0.2, duration: 0.5, ease: "power2.in" },
                 "+=3" // Long Hold
