@@ -3,14 +3,12 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Ravyn | Tsai Cho Lin Portfolio</title>
-
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
 
     <style>
-        /* --- [1. 基礎設定] --- */
         @font-face {
             font-family: "ARP";
             src: url("ARP-150.ttf");
@@ -20,23 +18,27 @@
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
         }
 
         body {
             background-color: #0e0e0e;
             color: #fff;
             font-family: "Helvetica Neue", Arial, "Noto Sans TC", sans-serif;
-            line-height: 1.6;
             overflow-x: hidden;
-            overscroll-behavior: none;
+            width: 100%;
+            line-height: 1.6;
+            /* Recalibrated: 16px @ 1920px ~= 0.83vw */
+            font-size: 0.83vw;
         }
 
-        /* --- [2. 導覽列] --- */
+        /* --- 導覽列 --- */
         nav {
             position: fixed;
             top: 0;
             width: 100%;
-            padding: 40px 5%;
+            /* 40px @ 1920 ~= 2.1vw */
+            padding: 2.1vw 5%;
             display: flex;
             justify-content: flex-end;
             z-index: 100;
@@ -45,18 +47,19 @@
         .nav-link {
             color: #fff;
             text-decoration: none;
-            font-size: 0.8rem;
-            letter-spacing: 4px;
+            /* 0.8rem (12.8px) -> 0.67vw */
+            font-size: 0.7vw;
+            letter-spacing: 0.2vw;
             cursor: pointer;
-            transition: 0.4s;
             font-weight: 300;
+            transition: 0.3s;
         }
 
         .nav-link:hover {
             opacity: 0.5;
         }
 
-        /* --- [3. 封面] --- */
+        /* --- 封面 --- */
         .hero {
             height: 100vh;
             width: 100%;
@@ -87,29 +90,31 @@
             background-position: center;
             opacity: 0;
             filter: brightness(0.3) grayscale(0.8);
-            background-attachment: fixed;
         }
 
         .hero h1 {
             font-family: "ARP", sans-serif;
-            font-size: 8vw;
-            letter-spacing: -2px;
+            /* Reverted close to original 8vw, maybe slightly larger 9vw for impact but not 14vw */
+            font-size: 9vw;
+            letter-spacing: -0.2vw;
             font-weight: 900;
-            color: #ffffff;
             z-index: 10;
             filter: url(#wave-filter);
+            text-align: center;
             pointer-events: none;
+            line-height: 1;
         }
 
         .hero h2 {
+            /* 1.1vw original */
             font-size: 1.1vw;
-            letter-spacing: 15px;
+            letter-spacing: 0.8vw;
             color: #777;
             text-transform: uppercase;
-            margin-top: 10px;
+            margin-top: 0.5vw;
         }
 
-        /* --- [4. 作品列表] --- */
+        /* --- 作品列表 --- */
         .project-section {
             padding-top: 10vh;
         }
@@ -118,14 +123,15 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            height: 100vh;
+            min-height: 100vh;
             width: 100%;
-            padding: 0 10%;
-            gap: 80px;
+            padding: 5vh 10%;
+            /* 80px @ 1920 ~= 4.2vw */
+            gap: 4.2vw;
             opacity: 0.1;
             transform: scale(0.65);
-            will-change: transform, opacity;
             cursor: pointer;
+            transition: 0.5s;
         }
 
         .project-item:nth-child(even) {
@@ -134,7 +140,9 @@
 
         .project-image-box {
             flex: 1.3;
+            width: 100%;
             height: 60vh;
+            /* Restore vh for height stability */
             overflow: hidden;
             background: #111;
         }
@@ -144,7 +152,7 @@
             height: 100%;
             object-fit: cover;
             filter: grayscale(1);
-            transition: 1.2s cubic-bezier(0.16, 1, 0.3, 1);
+            transition: 1.2s;
         }
 
         .project-item:hover .project-image-box img {
@@ -154,33 +162,121 @@
 
         .project-content {
             flex: 0.7;
-            max-width: 450px;
+            width: 100%;
         }
 
         .project-content span {
-            font-size: 0.7rem;
+            /* 0.7rem (~11px) -> 0.6vw */
+            font-size: 0.6vw;
             color: #aaa;
-            letter-spacing: 4px;
+            letter-spacing: 0.2vw;
             display: block;
-            margin-bottom: 15px;
+            margin-bottom: 0.8vw;
         }
 
         .project-content h3 {
-            font-size: 2.5rem;
+            /* 2.5rem (40px) -> 2.1vw */
+            font-size: 2.1vw;
             font-weight: 700;
-            color: #fff;
             line-height: 1.2;
-            margin-bottom: 25px;
+            margin-bottom: 1.3vw;
         }
 
         .project-content p {
-            color: #fff;
-            font-size: 1rem;
+            /* 1rem (16px) -> 0.83vw */
+            font-size: 0.85vw;
             font-weight: 300;
-            line-height: 1.8;
+            color: #ccc;
         }
 
-        /* --- [5. 關於我分頁] --- */
+        /* --- 左右翻頁瀏覽器 --- */
+        #book-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #000;
+            z-index: 4000;
+            display: none;
+            opacity: 0;
+            transition: opacity 0.4s;
+        }
+
+        #book-overlay.active {
+            opacity: 1;
+        }
+
+        #image-viewer {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            overflow-x: auto;
+            overflow-y: hidden;
+            scroll-snap-type: x mandatory;
+            scroll-behavior: smooth;
+        }
+
+        .img-slide {
+            min-width: 100vw;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            scroll-snap-align: start;
+        }
+
+        #image-viewer img {
+            max-width: 85vw;
+            max-height: 90vh;
+            object-fit: contain;
+            opacity: 0;
+            transition: 0.8s;
+        }
+
+        .nav-arrow {
+            position: fixed;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(255, 255, 255, 0.05);
+            color: white;
+            padding: 1.3vw 0.8vw;
+            cursor: pointer;
+            font-size: 1.5vw;
+            z-index: 5500;
+            transition: 0.3s;
+            border-radius: 4px;
+            user-select: none;
+        }
+
+        .nav-arrow:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .prev-arrow {
+            left: 2%;
+        }
+
+        .next-arrow {
+            right: 2%;
+        }
+
+        .close-book,
+        .close-btn {
+            position: fixed;
+            top: 2vw;
+            right: 5%;
+            color: #fff;
+            cursor: pointer;
+            letter-spacing: 0.2vw;
+            font-size: 0.7vw;
+            z-index: 6000;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 0.5vw 1vw;
+            border-radius: 4px;
+        }
+
+        /* --- 關於我 --- */
         #about-overlay {
             position: fixed;
             top: 0;
@@ -192,170 +288,246 @@
             display: none;
             justify-content: center;
             align-items: center;
+            overflow-y: auto;
         }
 
         .about-content {
             width: 90%;
-            max-width: 1100px;
+            max-width: 80vw;
             display: flex;
-            align-items: center;
-            gap: 80px;
+            align-items: flex-start;
+            /* 80px -> 4.2vw */
+            gap: 4.2vw;
+            padding: 10vh 0;
         }
 
         .about-photo {
             flex: 0.7;
-            max-width: 350px;
+            width: 25vw;
             aspect-ratio: 3/4;
             background: #151515;
             overflow: hidden;
+            position: sticky;
+            top: 10vh;
         }
 
         .about-photo img {
             width: 100%;
             height: 100%;
             object-fit: cover;
-            filter: grayscale(0.2) brightness(0.9);
         }
 
         .about-text {
             flex: 1.3;
             display: flex;
             flex-direction: column;
+            text-align: left;
         }
 
         .about-header {
-            margin-bottom: 35px;
+            margin-bottom: 2vw;
             border-bottom: 1px solid #333;
-            padding-bottom: 25px;
+            padding-bottom: 1.3vw;
         }
 
         .about-header h2 {
-            font-size: 2.8rem;
+            /* 2.8rem (~45px) -> 2.35vw */
+            font-size: 2.35vw;
             font-weight: 700;
-            letter-spacing: 2px;
             color: #fff;
-            line-height: 1.2;
         }
 
         .about-header h2 span {
-            font-size: 1.3rem;
+            /* 1.3rem (~21px) -> 1.1vw */
+            font-size: 1.1vw;
             color: #888;
             font-weight: 300;
-            margin-left: 15px;
-            letter-spacing: 3px;
+            margin-left: 0.8vw;
+            display: inline-block;
         }
 
         .info-grid {
             display: grid;
             grid-template-columns: 1fr;
-            gap: 20px;
-            overflow: visible;
+            gap: 1.5vw;
         }
 
         .info-item h4 {
-            font-size: 1.3rem;
+            /* 1.1rem (~17.6px) -> 0.92vw */
+            font-size: 0.95vw;
             color: #bdcde6;
-            letter-spacing: 5px;
-            margin-bottom: 10px;
+            letter-spacing: 0.3vw;
+            margin-bottom: 0.5vw;
             font-weight: 600;
+            border-left: 3px solid #bdcde6;
+            padding-left: 0.8vw;
         }
 
         .info-item p,
         .info-item li {
-            font-size: 0.9rem;
-            color: #fff;
+            /* 0.95rem (~15.2px) -> 0.8vw */
+            font-size: 0.8vw;
+            color: #ccc;
             list-style: none;
-            line-height: 1.8;
             font-weight: 300;
+            line-height: 1.8;
         }
 
         .info-item ul li {
-            margin-bottom: 8px;
-        }
-
-        .skill-tags {
-            font-size: 0.8rem;
-            color: #fff;
-            letter-spacing: 1.5px;
-            line-height: 1.8;
-            font-weight: 400;
-        }
-
-        .contact-info p {
-            font-size: 0.9rem;
-            color: #fff;
-            font-weight: 400;
-            letter-spacing: 1px;
-        }
-
-        .close-btn {
-            position: absolute;
-            top: 40px;
-            right: 5%;
-            color: #fff;
-            cursor: pointer;
-            letter-spacing: 4px;
-            font-size: 0.8rem;
-            opacity: 0.4;
-            transition: 0.4s;
-        }
-
-        .close-btn:hover {
-            opacity: 1;
-        }
-
-        /* --- [6. PDF 彈窗 - 漸入優化版] --- */
-        #book-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.98);
-            z-index: 2000;
-            display: none;
-            justify-content: center;
-            align-items: center;
-            opacity: 0;
-            transition: opacity 0.4s ease-out;
-        }
-
-        .book-container {
-            width: 90vw;
-            height: 85vh;
+            margin-bottom: 0.4vw;
             position: relative;
-            transform: scale(0.97);
-            opacity: 0;
-            will-change: transform, opacity;
-            transition: transform 0.5s ease-out, opacity 0.5s ease-out;
+            padding-left: 1.2vw;
         }
 
-        #book-overlay.active {
-            opacity: 1;
-        }
-
-        #book-overlay.active .book-container {
-            opacity: 1;
-            transform: scale(1);
-        }
-
-        .close-book {
+        .info-item ul li::before {
+            content: "○";
             position: absolute;
-            top: -45px;
-            right: 0;
-            color: #fff;
-            cursor: pointer;
-            letter-spacing: 2px;
-            font-size: 0.9rem;
-            opacity: 0.7;
+            left: 0;
+            color: #555;
         }
 
-        #pdf-viewer {
-            width: 100%;
-            height: 100%;
-            border: none;
-            background: #fff;
-            box-shadow: 0 40px 100px rgba(0, 0, 0, 0.8);
+        @media (max-width: 768px) {
+            body {
+                font-size: 3vw;
+            }
+
+            nav {
+                padding: 30px 5%;
+            }
+
+            .nav-link {
+                font-size: 14px;
+                letter-spacing: 2px;
+            }
+
+            .close-btn {
+                font-size: 14px;
+                padding: 10px 20px;
+            }
+
+            .hero h1 {
+                /* Reduced from 13vw to 11vw per user request */
+                font-size: 11vw;
+            }
+
+            .hero h2 {
+                /* Reduced from 3.5vw to 2.8vw */
+                font-size: 2.8vw;
+                letter-spacing: 5px;
+            }
+
+            .about-content {
+                flex-direction: column;
+                align-items: center;
+                /* Fit to screen height */
+                height: 100vh;
+                justify-content: center;
+                gap: 2vh;
+                /* Tight gap */
+                padding: 0;
+                max-width: 90vw;
+                overflow: hidden;
+                /* Prevent scrolling */
+            }
+
+            .about-photo {
+                position: relative;
+                top: 0;
+                margin: 0;
+                /* Added top margin to prevent sticking to top */
+                margin-top: 5vh;
+                /* Increased width to show full shoulders, constrained height to crop top/bottom */
+                width: 28vh;
+                height: 16vh;
+                flex-shrink: 0;
+            }
+
+            /* Fix photo framing */
+            .about-photo img {
+                object-position: center 50%;
+                /* Shift down to remove top grey space */
+            }
+
+            .about-text {
+                /* Ensure text container fits remaining space */
+                height: auto;
+                justify-content: center;
+            }
+
+            .about-header {
+                margin-bottom: 1.5vh;
+                padding-bottom: 1vh;
+            }
+
+            .about-header h2 {
+                /* Use vh for vertical fit */
+                font-size: 3vh;
+            }
+
+            .about-header h2 span {
+                font-size: 1.8vh;
+                margin-top: 0.5vh;
+            }
+
+            .info-grid {
+                gap: 1.5vh;
+            }
+
+            .info-item h4 {
+                font-size: 1.8vh;
+                letter-spacing: 2px;
+                margin-bottom: 0.5vh;
+            }
+
+            .info-item p,
+            .info-item li {
+                font-size: 1.4vh;
+                line-height: 1.4;
+            }
+
+            .info-item ul li {
+                margin-bottom: 0.2vh;
+            }
+
+            .nav-arrow {
+                display: none;
+            }
+
+            .project-item,
+            .project-item:nth-child(even) {
+                flex-direction: column;
+                height: auto;
+                min-height: auto;
+                padding: 10vh 5%;
+                gap: 4vh;
+                opacity: 1 !important;
+                transform: scale(1) !important;
+            }
+
+            .project-image-box {
+                height: 40vh;
+                max-height: none;
+                flex: none;
+            }
+
+            .project-content {
+                flex: none;
+                width: 100%;
+                text-align: left;
+            }
+
+            .project-content h3 {
+                font-size: 8vw;
+            }
+
+            .project-content span {
+                font-size: 3vw;
+                letter-spacing: 2px;
+            }
+
+            .project-content p {
+                font-size: 4vw;
+            }
         }
 
         footer {
@@ -372,40 +544,10 @@
             width: 0;
             height: 0;
         }
-
-        @media (max-width: 992px) {
-            .about-content {
-                flex-direction: column;
-                width: 90%;
-                gap: 30px;
-                text-align: center;
-            }
-
-            .about-photo {
-                max-width: 250px;
-            }
-
-            .about-header h2 {
-                font-size: 2.2rem;
-            }
-
-            .project-item,
-            .project-item:nth-child(even) {
-                flex-direction: column;
-                height: auto;
-                padding: 100px 5%;
-            }
-
-            .project-image-box {
-                width: 100%;
-                height: 40vh;
-            }
-        }
     </style>
 </head>
 
 <body>
-
     <svg class="svg-filters">
         <filter id="wave-filter">
             <feTurbulence id="turbulence" type="fractalNoise" baseFrequency="0.00001" numOctaves="2" result="noise" />
@@ -420,7 +562,7 @@
     <section class="hero">
         <div class="slideshow-container">
             <div class="slide"
-                style="background-image: url('https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=2000');">
+                style="background-image: url('https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=2000'); opacity: 1;">
             </div>
             <div class="slide"
                 style="background-image: url('https://images.unsplash.com/photo-1497366216548-37526070297c?q=80&w=2000');">
@@ -431,10 +573,8 @@
     </section>
 
     <div class="project-section">
-        <div class="project-item" onclick="openBook('Protfolio01.pdf')">
-            <div class="project-image-box">
-                <img src="Protfolio01.png" alt="Project 01">
-            </div>
+        <div class="project-item" onclick="openBook('p1', 8)">
+            <div class="project-image-box"><img src="Protfolio01.png" alt=""></div>
             <div class="project-content">
                 <span>PROJECT 01</span>
                 <h3>Portfolio｜Year 1 - 4</h3>
@@ -442,14 +582,23 @@
             </div>
         </div>
 
-        <div class="project-item" onclick="openBook('Project2.pdf')">
-            <div class="project-image-box">
-                <img src="https://images.unsplash.com/photo-1505330622279-bf7d7fc918f4?q=80&w=1500" alt="">
-            </div>
+        <div class="project-item" onclick="openBook('p2', 6)">
+            <div class="project-image-box"><img
+                    src="https://images.unsplash.com/photo-1505330622279-bf7d7fc918f4?q=80&w=1500" alt=""></div>
             <div class="project-content">
                 <span>COMPETITION</span>
                 <h3>Landscape Vision</h3>
-                <p>全國青年景觀競賽作品。將永續系統與社區動線融合，創造兼具生態價值與公共性的城市綠廊。</p>
+                <p>第五屆全國青年景觀競賽作品。將永續系統與社區動線融合，創造兼具生態價值與公共性的城市綠廊。</p>
+            </div>
+        </div>
+
+        <div class="project-item" onclick="openBook('p3', 7)">
+            <div class="project-image-box"><img
+                    src="https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=2000" alt=""></div>
+            <div class="project-content">
+                <span>PROJECT 03</span>
+                <h3>Architectural Research</h3>
+                <p>關於都市空間與人類行為的深度研究。透過數據分析與設計原型，探討未來居住環境的可能性。</p>
             </div>
         </div>
     </div>
@@ -457,9 +606,7 @@
     <div id="about-overlay">
         <div class="close-btn" onclick="toggleAbout(false)">CLOSE ✕</div>
         <div class="about-content">
-            <div class="about-photo">
-                <img src="tsai.jpg" alt="Tsai Cho Lin">
-            </div>
+            <div class="about-photo"><img src="tsai.jpg" alt=""></div>
             <div class="about-text" id="about-text-anim">
                 <div class="about-header">
                     <h2>蔡卓霖 <span>Tsai Cho Lin</span></h2>
@@ -484,41 +631,30 @@
                     </div>
                     <div class="info-item">
                         <h4>SKILLS</h4>
-                        <div class="skill-tags">
-                            SKETCHUP / RHINO / ARCHICAD / AUTOCAD<br>
-                            INDESIGN / PHOTOSHOP / ILLUSTRATOR
-                        </div>
+                        <p>SKETCHUP / RHINO / ARCHICAD / AUTOCAD<br>INDESIGN / PHOTOSHOP / ILLUSTRATOR</p>
                     </div>
-                    <div class="info-item contact-info">
+                    <div class="info-item">
                         <h4>CONTACT</h4>
-                        <p>T: 0902293812 / E: ravynooo.ooo@gmail.com</p>
+                        <p>T: 0902293812<br>E: ravynooo.ooo@gmail.com</p>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <footer>© 2026 TSAI CHO LIN. ALL RIGHTS RESERVED.</footer>
-
     <div id="book-overlay">
-        <div class="book-container">
-            <div class="close-book" onclick="closeBook()">CLOSE ✕</div>
-            <iframe id="pdf-viewer" src=""></iframe>
-        </div>
+        <div class="close-book" onclick="closeBook()">CLOSE ✕</div>
+        <div class="nav-arrow prev-arrow" onclick="moveSlide(-1)">❮</div>
+        <div class="nav-arrow next-arrow" onclick="moveSlide(1)">❯</div>
+        <div id="image-viewer"></div>
     </div>
+
+    <footer>© 2026 TSAI CHO LIN. ALL RIGHTS RESERVED.</footer>
 
     <script>
         gsap.registerPlugin(ScrollTrigger);
 
-        const slides = document.querySelectorAll(".slide");
-        let currentSlide = 0;
-        gsap.set(slides[0], { opacity: 1 });
-        setInterval(() => {
-            gsap.to(slides[currentSlide], { opacity: 0, duration: 2 });
-            currentSlide = (currentSlide + 1) % slides.length;
-            gsap.to(slides[currentSlide], { opacity: 1, duration: 2 });
-        }, 5000);
-
+        // 1. 波浪動態
         const turb = document.querySelector('#turbulence');
         window.addEventListener('mousemove', (e) => {
             if (window.scrollY < window.innerHeight) {
@@ -528,48 +664,53 @@
             }
         });
 
-        document.querySelectorAll('.project-item').forEach((item) => {
-            const tl = gsap.timeline({
-                scrollTrigger: {
-                    trigger: item, start: "top bottom", end: "bottom top", scrub: 1.5,
-                }
+        // 2. 滾動動畫 (電腦版)
+        if (window.innerWidth >= 768) {
+            document.querySelectorAll('.project-item').forEach((item) => {
+                gsap.timeline({
+                    scrollTrigger: { trigger: item, start: "top bottom", end: "bottom top", scrub: 1.5 }
+                }).to(item, { scale: 1, opacity: 1, duration: 1 })
+                    .to(item, { scale: 0.65, opacity: 0.1, duration: 1 }, "+=0.5");
             });
-            tl.to(item, { scale: 1, opacity: 1, duration: 1, ease: "none" })
-                .to(item, { scale: 0.65, opacity: 0.1, duration: 1, ease: "none" }, "+=0.5");
-        });
-
-        function toggleAbout(open) {
-            const overlay = document.getElementById('about-overlay');
-            if (open) {
-                overlay.style.display = 'flex';
-                gsap.fromTo("#about-text-anim", { y: 20, opacity: 0 }, { y: 0, opacity: 1, duration: 0.6 });
-                document.body.style.overflow = 'hidden';
-            } else {
-                overlay.style.display = 'none';
-                document.body.style.overflow = 'auto';
-            }
         }
 
-        function openBook(url) {
+        // 3. 左右翻頁圖片瀏覽器
+        function openBook(folder, count) {
+            const viewer = document.getElementById('image-viewer');
+            viewer.innerHTML = '';
+            for (let i = 1; i <= count; i++) {
+                const slide = document.createElement('div');
+                slide.className = 'img-slide';
+                const img = document.createElement('img');
+                img.src = `${folder}/${i}.png`;
+                img.onload = () => { img.style.opacity = "1"; };
+                slide.appendChild(img);
+                viewer.appendChild(slide);
+            }
             const overlay = document.getElementById('book-overlay');
-            const pdfViewer = document.getElementById('pdf-viewer');
-            pdfViewer.src = url + "#toolbar=0&view=Fit";
-            overlay.style.display = 'flex';
-            void overlay.offsetWidth;
-            overlay.classList.add('active');
+            overlay.style.display = 'block';
+            setTimeout(() => overlay.classList.add('active'), 10);
             document.body.style.overflow = 'hidden';
+            viewer.scrollLeft = 0;
+        }
+
+        function moveSlide(direction) {
+            const viewer = document.getElementById('image-viewer');
+            viewer.scrollBy({ left: direction * window.innerWidth, behavior: 'smooth' });
         }
 
         function closeBook() {
             const overlay = document.getElementById('book-overlay');
             overlay.classList.remove('active');
-            setTimeout(() => {
-                if (!overlay.classList.contains('active')) {
-                    overlay.style.display = 'none';
-                    document.getElementById('pdf-viewer').src = "";
-                }
-            }, 500);
+            setTimeout(() => { overlay.style.display = 'none'; }, 400);
             document.body.style.overflow = 'auto';
+        }
+
+        function toggleAbout(open) {
+            const overlay = document.getElementById('about-overlay');
+            overlay.style.display = open ? 'flex' : 'none';
+            document.body.style.overflow = open ? 'hidden' : 'auto';
+            if (open) gsap.fromTo("#about-text-anim", { y: 30, opacity: 0 }, { y: 0, opacity: 1, duration: 0.8 });
         }
     </script>
 </body>
