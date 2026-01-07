@@ -234,7 +234,8 @@
             max-width: 85vw;
             max-height: 90vh;
             object-fit: contain;
-            opacity: 0;
+            opacity: 1;
+            /* Changed from 0 to 1 to ensure visibility */
             transition: 0.8s;
         }
 
@@ -408,12 +409,19 @@
 
             .close-book,
             .close-btn {
-                font-size: 14px;
+                font-size: 16px !important;
+                /* Force readable size */
                 padding: 10px 20px;
-                /* Big touch target */
                 top: 20px;
-                /* Specific top offset */
-                padding: 10px 15px;
+                background: rgba(255, 255, 255, 0.2);
+                /* Make it more visible */
+            }
+
+            /* Force images to be visible on mobile */
+            #image-viewer img {
+                opacity: 1 !important;
+                max-width: 95vw;
+                max-height: 80vh;
             }
 
             .hero h1 {
