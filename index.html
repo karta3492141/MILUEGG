@@ -631,8 +631,12 @@
             /* --- Graduation Menu Mobile Overrides --- */
             /* Base styles moved to global scope */
             .grad-title {
-                font-size: 8vw;
+                font-size: 5.5vw;
                 margin-bottom: 4vh;
+                white-space: nowrap;
+                /* Prevent wrapping */
+                letter-spacing: 3px;
+                /* Slightly reduced letter spacing */
             }
 
             .grad-options {
@@ -836,10 +840,11 @@
         <div class="hero-bg-slider">
             <img src="tree1.jpg" class="hero-bg-slide" alt="Hero BG">
             <img src="tree2.jpg" class="hero-bg-slide" alt="Hero BG">
-            <img src="tree3.jpg" class="hero-bg-slide" alt="Hero BG">
+            <img src="cry1.png" class="hero-bg-slide" alt="Hero BG">
             <img src="tree4.jpg" class="hero-bg-slide" alt="Hero BG">
             <img src="tree5.jpg" class="hero-bg-slide" alt="Hero BG">
             <img src="human1.jpg" class="hero-bg-slide" alt="Hero BG">
+            <img src="map1.jpg" class="hero-bg-slide" alt="Hero BG">
         </div>
         <div class="hero-overlay"></div>
         <h1>PORTFOLIO</h1>
@@ -970,7 +975,7 @@
         </div>
 
         <div id="book-overlay">
-            <div class="back-book" onclick="backToGradMenu()">BACK ↩</div>
+            <div class="back-book" onclick="backToGradMenu()">BACK</div>
             <div class="close-book" onclick="closeBook()">CLOSE ✕</div>
             <div class="nav-arrow prev-arrow" onclick="moveSlide(-1)">❮</div>
             <div class="nav-arrow next-arrow" onclick="moveSlide(1)">❯</div>
@@ -1208,7 +1213,7 @@
                         heroSlides[heroIndex].classList.remove('active');
                         heroIndex = (heroIndex + 1) % heroSlides.length;
                         heroSlides[heroIndex].classList.add('active');
-                    }, 5000); // Switch every 5 seconds
+                    }, 3000); // Switch every 3 seconds
                 }
             });
         </script>
