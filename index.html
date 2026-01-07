@@ -200,7 +200,8 @@
             z-index: 4000;
             display: none;
             opacity: 0;
-            transition: opacity 0.4s;
+            transition: 0.3s;
+            /* Speed up from 0.5s to 0.3s */
         }
 
         #book-overlay.active {
@@ -236,7 +237,8 @@
             object-fit: contain;
             opacity: 1;
             /* Changed from 0 to 1 to ensure visibility */
-            transition: 0.8s;
+            transition: 0.3s;
+            /* Speed up from 0.8s to 0.3s per user request */
         }
 
         .nav-arrow {
@@ -720,22 +722,37 @@
             // Clear any CSS set props to ensure GSAP clean start
             gsap.set(item, { clearProps: "all" });
 
-            gsap.timeline({
+            const tl = gsap.timeline({
                 scrollTrigger: {
                     trigger: item,
                     start: triggerStart,
                     end: triggerEnd,
                     scrub: scrubValue,
                 }
-            })
-                .fromTo(item,
-                    { scale: startScale, opacity: 0.2 }, // Start state
-                    { scale: 1, opacity: 1, duration: 0.5, ease: "power2.out" } // Fast Entry (12.5% of scrolling)
+            });
+
+            if (isMobile) {
+                // Mobile: Staggered (Enlarge FIRST, then Brighten)
+                tl.fromTo(item,
+                    { scale: startScale, opacity: 0.2 },
+                    { scale: 1, opacity: 0.2, duration: 0.3, ease: "power1.out" } // Step 1: Grow
                 )
-                .to(item,
-                    { scale: startScale, opacity: 0.2, duration: 0.5, ease: "power2.in" }, // Fast Exit (12.5% of scrolling)
-                    "+=3" // Long Hold (75% of scrolling) - Item stays bright for most of the screen
+                    .to(item,
+                        { opacity: 1, duration: 0.3, ease: "power1.out" } // Step 2: Brighten
+                    );
+            } else {
+                // Desktop: Simultaneous (Grow & Brighten together)
+                tl.fromTo(item,
+                    { scale: startScale, opacity: 0.2 },
+                    { scale: 1, opacity: 1, duration: 0.5, ease: "power2.out" }
                 );
+            }
+
+            // Common Exit (Fade out & Shrink after hold)
+            tl.to(item,
+                { scale: startScale, opacity: 0.2, duration: 0.5, ease: "power2.in" },
+                "+=3" // Long Hold
+            );
         });
 
         // 3. 左右翻頁圖片瀏覽器
