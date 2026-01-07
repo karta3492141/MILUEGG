@@ -215,6 +215,8 @@
             overflow-y: hidden;
             scroll-snap-type: x mandatory;
             scroll-behavior: smooth;
+            -webkit-overflow-scrolling: touch;
+            /* Enable smooth scrolling on iOS */
         }
 
         .img-slide {
@@ -224,6 +226,8 @@
             justify-content: center;
             align-items: center;
             scroll-snap-align: start;
+            flex-shrink: 0;
+            /* Critical: Prevent slides from shrinking */
         }
 
         #image-viewer img {
@@ -264,12 +268,14 @@
         .close-book,
         .close-btn {
             position: fixed;
-            top: 2vw;
+            top: 3vw;
+            /* Default for desktop */
             right: 5%;
             color: #fff;
             cursor: pointer;
             letter-spacing: 0.2vw;
-            font-size: 0.7vw;
+            /* Ensure readable size on all devices: min 14px */
+            font-size: clamp(14px, 0.7vw, 16px);
             z-index: 6000;
             background: rgba(255, 255, 255, 0.1);
             padding: 0.5vw 1vw;
@@ -400,9 +406,14 @@
                 letter-spacing: 2px;
             }
 
+            .close-book,
             .close-btn {
                 font-size: 14px;
                 padding: 10px 20px;
+                /* Big touch target */
+                top: 20px;
+                /* Specific top offset */
+                padding: 10px 15px;
             }
 
             .hero h1 {
@@ -421,10 +432,12 @@
                 align-items: center;
                 /* Fit to screen height */
                 height: 100vh;
-                justify-content: center;
-                gap: 2vh;
-                /* Tight gap */
-                padding: 0;
+                justify-content: flex-start;
+                /* Align to top to respect padding */
+                gap: 1.5vh;
+                /* Reduced gap to save space */
+                padding-top: 6vh;
+                /* Reduced padding from 12vh */
                 max-width: 90vw;
                 overflow: hidden;
                 /* Prevent scrolling */
@@ -434,8 +447,6 @@
                 position: relative;
                 top: 0;
                 margin: 0;
-                /* Added top margin to prevent sticking to top */
-                margin-top: 5vh;
                 /* Increased width to show full shoulders, constrained height to crop top/bottom */
                 width: 28vh;
                 height: 16vh;
@@ -444,8 +455,8 @@
 
             /* Fix photo framing */
             .about-photo img {
-                object-position: center 50%;
-                /* Shift down to remove top grey space */
+                object-position: center 40%;
+                /* Relaxed slightly from 50% */
             }
 
             .about-text {
@@ -682,8 +693,15 @@
                 const slide = document.createElement('div');
                 slide.className = 'img-slide';
                 const img = document.createElement('img');
-                img.src = `${folder}/${i}.png`;
+
+                // Set handlers BEFORE src to ensure they catch the event (though usually fine, this is safer)
                 img.onload = () => { img.style.opacity = "1"; };
+                img.onerror = () => {
+                    console.error("Failed to load image:", img.src);
+                    img.style.opacity = "1"; // Show it anyway so we know it's there
+                };
+
+                img.src = `${folder}/${i}.png`;
                 slide.appendChild(img);
                 viewer.appendChild(slide);
             }
