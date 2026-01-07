@@ -542,9 +542,9 @@
                 min-height: auto;
                 padding: 10vh 5%;
                 gap: 4vh;
-                /* Removed !important to allow GSAP animation */
-                opacity: 1;
-                transform: scale(1);
+                /* Initial state for mobile animation (match desktop feel) */
+                opacity: 0.2;
+                transform: scale(0.9);
             }
 
             .project-image-box {
@@ -707,35 +707,36 @@
             }
         });
 
-        // 2. 滾動動畫
-        if (window.innerWidth >= 768) {
-            // Desktop: Focus effect (Scale down -> Scale up -> Scale down)
-            document.querySelectorAll('.project-item').forEach((item) => {
-                gsap.timeline({
-                    scrollTrigger: { trigger: item, start: "top bottom", end: "bottom top", scrub: 1.5 }
-                }).to(item, { scale: 1, opacity: 1, duration: 1 })
-                    .to(item, { scale: 0.65, opacity: 0.1, duration: 1 }, "+=0.5");
-            });
-        } else {
-            // Mobile: Slide Up & Fade In (More obvious entrance)
-            document.querySelectorAll('.project-item').forEach((item) => {
-                // Set initial state
-                gsap.set(item, { opacity: 0, y: 30 }); // Reduced movement distance for smoothness
+        // 2. 滾動動畫 (Responsive)
+        const isMobile = window.innerWidth < 768;
 
-                gsap.to(item, {
-                    scrollTrigger: {
-                        trigger: item,
-                        start: "top 95%", // Start triggering almost immediately when item enters
-                        end: "top 60%", // End earlier
-                        toggleActions: "play none none reverse"
-                    },
-                    opacity: 1,
-                    y: 0,
-                    duration: 0.6, // Faster, snappy animation
-                    ease: "power1.out"
-                });
-            });
-        }
+        document.querySelectorAll('.project-item').forEach((item) => {
+            // Config based on device
+            const scrubValue = isMobile ? 0.5 : 1.5; // Faster response on mobile
+            const startScale = isMobile ? 0.9 : 0.65; // Less extreme scaling on mobile for readability
+            const triggerStart = isMobile ? "top 85%" : "top bottom";
+            const triggerEnd = isMobile ? "center 45%" : "bottom top";
+
+            // Clear any CSS set props to ensure GSAP clean start
+            gsap.set(item, { clearProps: "all" });
+
+            gsap.timeline({
+                scrollTrigger: {
+                    trigger: item,
+                    start: triggerStart,
+                    end: triggerEnd,
+                    scrub: scrubValue,
+                }
+            })
+                .fromTo(item,
+                    { scale: startScale, opacity: 0.2 }, // Start state
+                    { scale: 1, opacity: 1, duration: 1, ease: "power2.out" } // Active state
+                )
+                .to(item,
+                    { scale: startScale, opacity: 0.2, duration: 1, ease: "power2.in" }, // Exit state
+                    "+=0.5" // Hold active state briefly
+                );
+        });
 
         // 3. 左右翻頁圖片瀏覽器
         function openBook(folder, count) {
