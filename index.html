@@ -409,19 +409,28 @@
 
             .close-book,
             .close-btn {
-                font-size: 16px !important;
-                /* Force readable size */
-                padding: 10px 20px;
-                top: 20px;
-                background: rgba(255, 255, 255, 0.2);
-                /* Make it more visible */
+                font-size: 20px !important;
+                /* Huge text */
+                padding: 15px 30px !important;
+                /* Huge touch target */
+                top: 20px !important;
+                background: rgba(0, 0, 0, 0.8) !important;
+                /* Dark background for contrast */
+                border: 1px solid white;
+                /* Visible border */
+                z-index: 2147483647 !important;
+                /* Max Z-Index */
             }
 
             /* Force images to be visible on mobile */
             #image-viewer img {
                 opacity: 1 !important;
-                max-width: 95vw;
-                max-height: 80vh;
+                display: block !important;
+                min-width: 100vw !important;
+                /* Force full width */
+                height: auto !important;
+                max-height: 80vh !important;
+                object-fit: contain !important;
             }
 
             .hero h1 {
@@ -702,12 +711,12 @@
                 slide.className = 'img-slide';
                 const img = document.createElement('img');
 
-                // Set handlers BEFORE src to ensure they catch the event (though usually fine, this is safer)
-                img.onload = () => { img.style.opacity = "1"; };
-                img.onerror = () => {
-                    console.error("Failed to load image:", img.src);
-                    img.style.opacity = "1"; // Show it anyway so we know it's there
-                };
+                // Removed opacity handlers - rely on CSS for visibility to avoid glitches
+                // img.onload = () => { img.style.opacity = "1"; };
+                // img.onerror = () => {
+                //     console.error("Failed to load image:", img.src);
+                //     img.style.opacity = "1"; // Show it anyway so we know it's there
+                // };
 
                 img.src = `${folder}/${i}.png`;
                 slide.appendChild(img);
