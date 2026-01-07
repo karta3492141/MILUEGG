@@ -712,10 +712,10 @@
 
         document.querySelectorAll('.project-item').forEach((item) => {
             // Config based on device
-            const scrubValue = isMobile ? 1 : 1.5; // Smooth scrub for both
-            const startScale = isMobile ? 0.9 : 0.65; // Less extreme scaling on mobile for readability
+            const scrubValue = isMobile ? 0.5 : 1.5; // Responsive scrub
+            const startScale = isMobile ? 0.85 : 0.65; // Balanced scaling for mobile
             const triggerStart = isMobile ? "top 85%" : "top bottom";
-            const triggerEnd = isMobile ? "bottom 20%" : "bottom top"; // Extended range for mobile to keep it active in center
+            const triggerEnd = isMobile ? "bottom 10%" : "bottom top"; // End only when almost fully left
 
             // Clear any CSS set props to ensure GSAP clean start
             gsap.set(item, { clearProps: "all" });
@@ -730,11 +730,11 @@
             })
                 .fromTo(item,
                     { scale: startScale, opacity: 0.2 }, // Start state
-                    { scale: 1, opacity: 1, duration: 1, ease: "power2.out" } // Active state
+                    { scale: 1, opacity: 1, duration: 0.5, ease: "power2.out" } // Fast Entry (12.5% of scrolling)
                 )
                 .to(item,
-                    { scale: startScale, opacity: 0.2, duration: 1, ease: "power2.in" }, // Exit state
-                    "+=0.5" // Hold active state briefly
+                    { scale: startScale, opacity: 0.2, duration: 0.5, ease: "power2.in" }, // Fast Exit (12.5% of scrolling)
+                    "+=3" // Long Hold (75% of scrolling) - Item stays bright for most of the screen
                 );
         });
 
