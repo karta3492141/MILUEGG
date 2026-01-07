@@ -414,19 +414,19 @@
             .close-btn {
                 font-size: 12px !important;
                 /* Smaller text */
-                padding: 6px 12px !important;
+                padding: 5px 10px !important;
                 /* Minimal padding */
                 top: 20px !important;
-                background: rgba(255, 255, 255, 0.2) !important;
+                background: transparent !important;
                 border: none !important;
                 z-index: 6000 !important;
             }
 
             /* Keep Portfolio Close Button visible but sized reasonably */
             .close-book {
-                font-size: 16px !important;
-                /* Prominent size */
-                padding: 12px 24px !important;
+                font-size: 14px !important;
+                /* Prominent but not huge */
+                padding: 8px 16px !important;
                 /* Good touch target */
                 top: 20px !important;
                 background: rgba(0, 0, 0, 0.8) !important;
@@ -720,18 +720,19 @@
             // Mobile: Slide Up & Fade In (More obvious entrance)
             document.querySelectorAll('.project-item').forEach((item) => {
                 // Set initial state
-                gsap.set(item, { opacity: 0, y: 50 });
+                gsap.set(item, { opacity: 0, y: 30 }); // Reduced movement distance for smoothness
 
                 gsap.to(item, {
                     scrollTrigger: {
                         trigger: item,
-                        start: "top 85%", // Start triggering when item is near bottom of screen
-                        toggleActions: "play none none reverse" // Play on enter, reverse on leave up
+                        start: "top 95%", // Start triggering almost immediately when item enters
+                        end: "top 60%", // End earlier
+                        toggleActions: "play none none reverse"
                     },
                     opacity: 1,
                     y: 0,
-                    duration: 0.8,
-                    ease: "power2.out"
+                    duration: 0.6, // Faster, snappy animation
+                    ease: "power1.out"
                 });
             });
         }
