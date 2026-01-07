@@ -281,6 +281,8 @@
             background: rgba(255, 255, 255, 0.1);
             padding: 0.5vw 1vw;
             border-radius: 4px;
+            font-family: sans-serif;
+            /* Setup safe font for 'X' icon */
         }
 
         /* --- 關於我 --- */
@@ -407,17 +409,26 @@
                 letter-spacing: 2px;
             }
 
-            .close-book,
+            /* Restore About Me Close Button to normal */
             .close-btn {
-                font-size: 20px !important;
-                /* Huge text */
-                padding: 15px 30px !important;
-                /* Huge touch target */
+                font-size: 14px !important;
+                padding: 10px 20px !important;
+                top: 20px !important;
+                background: rgba(255, 255, 255, 0.2) !important;
+                border: none !important;
+                z-index: 6000 !important;
+            }
+
+            /* Keep Portfolio Close Button visible but sized reasonably */
+            .close-book {
+                font-size: 16px !important;
+                /* Prominent size */
+                padding: 12px 24px !important;
+                /* Good touch target */
                 top: 20px !important;
                 background: rgba(0, 0, 0, 0.8) !important;
-                /* Dark background for contrast */
-                border: 1px solid white;
-                /* Visible border */
+                /* Dark background */
+                border: 1px solid white !important;
                 z-index: 2147483647 !important;
                 /* Max Z-Index */
             }
@@ -715,8 +726,19 @@
                 // img.onload = () => { img.style.opacity = "1"; };
                 // img.onerror = () => {
                 //     console.error("Failed to load image:", img.src);
-                //     img.style.opacity = "1"; // Show it anyway so we know it's there
-                // };
+                // Add visual error handling to diagnose GitHub path issues
+                img.onerror = () => {
+                    console.error("Failed to load image:", img.src);
+                    const errorText = document.createElement('div');
+                    errorText.style.color = "white";
+                    errorText.style.position = "absolute";
+                    errorText.style.zIndex = "10";
+                    errorText.style.background = "rgba(255,0,0,0.5)";
+                    errorText.style.padding = "5px";
+                    // Display relative path to help debugging
+                    errorText.innerText = `Image not found: ${folder}/${i}.png`;
+                    slide.appendChild(errorText);
+                };
 
                 img.src = `${folder}/${i}.png`;
                 slide.appendChild(img);
