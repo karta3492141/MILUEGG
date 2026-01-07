@@ -712,10 +712,10 @@
 
         document.querySelectorAll('.project-item').forEach((item) => {
             // Config based on device
-            const scrubValue = isMobile ? 0.5 : 1.5; // Faster response on mobile
+            const scrubValue = isMobile ? 1 : 1.5; // Smooth scrub for both
             const startScale = isMobile ? 0.9 : 0.65; // Less extreme scaling on mobile for readability
             const triggerStart = isMobile ? "top 85%" : "top bottom";
-            const triggerEnd = isMobile ? "center 45%" : "bottom top";
+            const triggerEnd = isMobile ? "bottom 20%" : "bottom top"; // Extended range for mobile to keep it active in center
 
             // Clear any CSS set props to ensure GSAP clean start
             gsap.set(item, { clearProps: "all" });
