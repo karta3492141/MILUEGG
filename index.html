@@ -252,20 +252,22 @@
             overflow-x: auto;
             overflow-y: hidden;
             scroll-snap-type: x mandatory;
+            -webkit-scroll-snap-type: x mandatory;
             scroll-behavior: smooth;
             -webkit-overflow-scrolling: touch;
-            /* Enable smooth scrolling on iOS */
+            scroll-padding: 0;
         }
 
         .img-slide {
-            min-width: 100vw;
+            width: 100vw;
+            flex-shrink: 0;
             height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
-            scroll-snap-align: start;
-            flex-shrink: 0;
-            /* Critical: Prevent slides from shrinking */
+            scroll-snap-align: center;
+            overflow: hidden;
+            contain: layout;
         }
 
         #image-viewer img {
