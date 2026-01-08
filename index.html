@@ -4,6 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="format-detection" content="telephone=no">
     <title>Ravyn | Tsai Cho Lin Portfolio</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
@@ -19,6 +20,11 @@
             padding: 0;
             box-sizing: border-box;
             -webkit-tap-highlight-color: transparent;
+            /* Disable selection and dragging to protect content */
+            user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -webkit-user-drag: none;
         }
 
         html,
@@ -49,6 +55,13 @@
         button,
         [onclick] {
             cursor: url('./todo.png') 0 0, pointer !important;
+        }
+
+        /* Prevent phone numbers from being styled as links on mobile */
+        [href^="tel:"],
+        a[href^="tel:"] {
+            color: inherit !important;
+            text-decoration: none !important;
         }
 
         /* --- 導覽列 --- */
@@ -1514,6 +1527,20 @@
                     percentText.innerText = progress;
                 }, 80);
             }
+
+            // --- NEW: Basic Content Protection ---
+            document.addEventListener('contextmenu', (e) => e.preventDefault()); // Disable right-click
+
+            document.addEventListener('keydown', (e) => {
+                // Disable F12
+                if (e.key === 'F12') {
+                    e.preventDefault();
+                }
+                // Disable Ctrl+Shift+I, Ctrl+Shift+J, Ctrl+U
+                if (e.ctrlKey && (e.shiftKey && (e.key === 'I' || e.key === 'J') || e.key === 'u')) {
+                    e.preventDefault();
+                }
+            });
 
             // Ensure body overflow is hidden during load
             document.body.style.overflow = 'hidden';
