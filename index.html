@@ -1241,7 +1241,9 @@
 
                 toggleGradMenu(false); // Close menu, open book
                 setTimeout(() => {
-                    const mode = category === 'proposal' ? 'spread' : 'single';
+                    // Force 'single' mode on mobile (width <= 768) even for proposal
+                    const isMob = window.innerWidth <= 768;
+                    const mode = (category === 'proposal' && !isMob) ? 'spread' : 'single';
                     openBook(folderName, counts[category], 'jpg', mode);
                     // Show Back Button explicitly for Grad projects
                     document.querySelector('.back-book').style.display = 'block';
@@ -1286,20 +1288,20 @@
                         slide.appendChild(w);
                         viewer.appendChild(slide);
                     }
-
-                    initZoomLogic();
                 } else {
                     viewer.classList.remove('spread-mode');
-                    // Existing single mode logic without zoom wrapper (can add if needed)
                     for (let i = 1; i <= count; i++) {
                         const slide = document.createElement('div');
                         slide.className = 'img-slide';
-                        const img = createImgElement(folder, i, ext);
-                        slide.appendChild(img);
+                        const w = document.createElement('div');
+                        w.className = 'zoom-wrapper';
+                        w.appendChild(createImgElement(folder, i, ext));
+                        slide.appendChild(w);
                         viewer.appendChild(slide);
                     }
                 }
 
+                initZoomLogic(); // Enable zoom for both modes
                 const overlay = document.getElementById('book-overlay');
                 overlay.style.display = 'block';
                 setTimeout(() => overlay.classList.add('active'), 10);
