@@ -826,6 +826,57 @@
             transform: scale(1);
         }
 
+        /* --- 照片掛繩效果 (Collage Rope) --- */
+        #collage-rope {
+            position: absolute;
+            top: 100px;
+            left: 0;
+            width: 100%;
+            height: 1px;
+            background: rgba(255, 255, 255, 0.4);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+            z-index: 5;
+            pointer-events: none;
+            display: block;
+        }
+
+        .collage-item.hanging {
+            padding: 4px 4px 15px 4px !important;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3) !important;
+            transition: all 0.8s cubic-bezier(0.2, 0, 0.2, 1) !important;
+        }
+
+        /* 夾子效果 (Clothespin) */
+        .collage-item.hanging::before {
+            content: '';
+            position: absolute;
+            top: -12px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 8px;
+            height: 20px;
+            background: #d4b491;
+            border-radius: 2px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.4);
+            z-index: 10;
+        }
+
+        @media (max-width: 768px) {
+            #collage-rope {
+                top: 80px;
+            }
+
+            .collage-item.hanging {
+                padding: 3px 3px 10px 3px !important;
+            }
+
+            .collage-item.hanging::before {
+                width: 6px;
+                height: 15px;
+                top: -10px;
+            }
+        }
+
         @media (max-width: 768px) {
             .collage-item {
                 /* Width set dynamically via JS */
@@ -1157,7 +1208,7 @@
         <div class="project-item" onclick="openBook('p4', 9)">
             <div class="project-image-box"><img src="unity.png" alt=""></div>
             <div class="project-content">
-                <span>PROJECT O2</span>
+                <span>2O23 PROJECT O2</span>
                 <h3>UNITY PLAZA</h3>
                 <p>第五屆全國青年景觀競賽作品。將永續系統與社區動線融合，創造兼具生態價值與公共性的城市綠廊。</p>
             </div>
@@ -1166,7 +1217,7 @@
         <div class="project-item" onclick="openBook('p5', 4)">
             <div class="project-image-box"><img src="garden.png" alt=""></div>
             <div class="project-content">
-                <span>PROJECT O3</span>
+                <span>2O23 PROJECT O3</span>
                 <h3>Modular Market Garden</h3>
                 <p>第五屆全國青年景觀競賽作品。將永續系統與社區動線融合，創造兼具生態價值與公共性的城市綠廊。</p>
             </div>
@@ -1175,7 +1226,7 @@
         <div class="project-item" onclick="openBook('p6', 6)">
             <div class="project-image-box"><img src="tiny.png" alt=""></div>
             <div class="project-content">
-                <span>PROJECT O4</span>
+                <span>2O23 PROJECT O4</span>
                 <h3>Building a Tiny Box</h3>
                 <p>第五屆全國青年景觀競賽作品。將永續系統與社區動線融合，創造兼具生態價值與公共性的城市綠廊。</p>
             </div>
@@ -1184,7 +1235,7 @@
         <div class="project-item" onclick="openBook('p7', 7)">
             <div class="project-image-box"><img src="Intergenerational.png" alt=""></div>
             <div class="project-content">
-                <span>PROJECT O5</span>
+                <span>2O22 PROJECT O5</span>
                 <h3>Intergenerational Co-living</h3>
                 <p>第五屆全國青年景觀競賽作品。將永續系統與社區動線融合，創造兼具生態價值與公共性的城市綠廊。</p>
             </div>
@@ -1193,7 +1244,7 @@
         <div class="project-item" onclick="openBook('p8', 4)">
             <div class="project-image-box"><img src="kai.png" alt=""></div>
             <div class="project-content">
-                <span>PROJECT 06</span>
+                <span>2O22 PROJECT 06</span>
                 <h3>Kaiyuan Temple model Making</h3>
                 <p>第五屆全國青年景觀競賽作品。將永續系統與社區動線融合，創造兼具生態價值與公共性的城市綠廊。</p>
             </div>
@@ -1249,6 +1300,7 @@
         <div id="collage-overlay">
             <div class="back-book" onclick="backToGradMenu()">BACK</div>
             <div class="close-book" onclick="closeBook()">CLOSE ✕</div>
+            <div id="collage-rope"></div>
             <div id="collage-container"></div>
         </div>
 
@@ -1414,7 +1466,7 @@
             function openGradBook(category) {
                 const counts = {
                     'book': 25,
-                    'model': 13,
+                    'model': 21,
                     'design': 10,
                     'proposal': 68
                 };
@@ -1509,11 +1561,14 @@
 
             // --- 照片牆邏輯 (Collage Logic) ---
             let collageZ = 100;
+            let hungCount = 0;
+            let currentActiveItem = null;
 
             function openCollageViewer(folder, count) {
                 const overlay = document.getElementById('collage-overlay');
                 const container = document.getElementById('collage-container');
                 container.innerHTML = ''; // Clear old
+                hungCount = 0; // Reset hanging count
 
                 // Show overlay
                 overlay.style.display = 'block';
@@ -1606,7 +1661,7 @@
 
                         if (!isDragging) {
                             // It was a click!
-                            openCollageLightbox(el.querySelector('img').src);
+                            openCollageLightbox(el);
                         } else {
                             el.style.transition = 'transform 0.3s cubic-bezier(0.2, 0, 0.2, 1)';
                             el.style.cursor = 'grab';
@@ -1623,10 +1678,11 @@
                 el.addEventListener('touchstart', startMove, { passive: true });
             }
 
-            function openCollageLightbox(src) {
+            function openCollageLightbox(el) {
+                currentActiveItem = el;
                 const lightbox = document.getElementById('collage-lightbox');
                 const img = document.getElementById('lightbox-img');
-                img.src = src;
+                img.src = el.querySelector('img').src;
                 lightbox.style.display = 'flex';
                 setTimeout(() => lightbox.classList.add('active'), 10);
             }
@@ -1636,7 +1692,43 @@
                 lightbox.classList.remove('active');
                 setTimeout(() => {
                     lightbox.style.display = 'none';
+                    if (currentActiveItem && !currentActiveItem.classList.contains('hanging')) {
+                        hangItem(currentActiveItem);
+                    }
                 }, 400);
+            }
+
+            function hangItem(el) {
+                if (el.classList.contains('hanging')) return;
+
+                el.classList.add('hanging');
+                const isMob = window.innerWidth <= 768;
+
+                // Target width for hanging
+                const itemW = isMob ? 100 : 160;
+                const spacing = isMob ? 110 : 185;
+                const startLeft = isMob ? 20 : 50;
+
+                // Position on rope
+                const rope = document.getElementById('collage-rope');
+                const ropeTop = rope.offsetTop;
+
+                // Horizontal wrapping logic
+                const itemsPerRow = Math.floor((window.innerWidth - 100) / spacing);
+                const row = Math.floor(hungCount / itemsPerRow);
+                const col = hungCount % itemsPerRow;
+
+                const targetLeft = startLeft + (col * spacing);
+                const targetTop = ropeTop - (isMob ? 8 : 10) + (row * (isMob ? 130 : 230));
+
+                el.style.transition = 'all 0.8s cubic-bezier(0.34, 1.56, 0.64, 1)';
+                el.style.width = `${itemW}px`;
+                el.style.left = `${targetLeft}px`;
+                el.style.top = `${targetTop}px`;
+                el.style.transform = `rotate(${(Math.random() - 0.5) * 10}deg)`;
+                el.style.zIndex = 10 + hungCount;
+
+                hungCount++;
             }
 
             // --- NEW: Zoom & Pan Logic ---
