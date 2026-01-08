@@ -273,9 +273,65 @@
             max-height: 90vh;
             object-fit: contain;
             opacity: 1;
-            /* Changed from 0 to 1 to ensure visibility */
+            /* Enhance clarity for scaled images */
+            image-rendering: -webkit-optimize-contrast;
+            image-rendering: auto;
+            transform: translateZ(0);
+            /* Force GPU rendering for sharper edges */
             transition: 0.3s;
-            /* Speed up from 0.8s to 0.3s per user request */
+        }
+
+        /* --- 併排模式 (Spread Mode) --- */
+        .spread-mode .img-slide {
+            gap: 0;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            contain: layout;
+            /* Helps browser optimize rendering of individual slides */
+        }
+
+        .zoom-wrapper {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.1s ease-out;
+            transform-origin: center center;
+            cursor: grab;
+            will-change: transform;
+            user-select: none;
+        }
+
+        .zoom-wrapper.dragging {
+            cursor: grabbing;
+            transition: none;
+        }
+
+        .spread-mode .img-slide img {
+            max-width: 49vw;
+            height: auto;
+            max-height: 95vh;
+            pointer-events: none;
+            /* Prevents dragging the image itself */
+        }
+
+        /* Specifically for the cover (first slide) in spread mode */
+        .spread-mode .img-slide:first-child img {
+            max-width: 80vw;
+            max-height: 95vh;
+        }
+
+        @media (max-width: 768px) {
+            .spread-mode .img-slide {
+                flex-direction: column;
+                /* Mobile stay vertical or stack */
+                gap: 2vh;
+            }
+
+            .spread-mode .img-slide img {
+                max-width: 85vw;
+                max-height: 40vh;
+            }
         }
 
         .back-book {
@@ -344,6 +400,49 @@
             border-radius: 4px;
             font-family: sans-serif;
             /* Setup safe font for 'X' icon */
+        }
+
+        /* --- 加載器 (Loader) --- */
+        #loader {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #0e0e0e;
+            z-index: 2147483647;
+            /* Ensure it's above everything */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: opacity 0.8s ease;
+        }
+
+        .loader-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .building-svg {
+            width: 150px;
+            margin-bottom: 20px;
+        }
+
+        .loading-text {
+            font-family: "ARP", sans-serif;
+            letter-spacing: 5px;
+            font-size: 10px;
+            color: #555;
+        }
+
+        #percent {
+            color: #fff;
+        }
+
+        #arch-line {
+            stroke-dasharray: 320;
+            stroke-dashoffset: 320;
         }
 
         /* --- 關於我 --- */
@@ -825,6 +924,15 @@
 </head>
 
 <body>
+    <div id="loader">
+        <div class="loader-content">
+            <svg viewBox="0 0 100 100" class="building-svg">
+                <path id="arch-line" d="M10 90 L10 10 L90 10 L90 90 Z" fill="none" stroke="white" stroke-width="0.5" />
+            </svg>
+            <div class="loading-text">CONSTRUCTING... <span id="percent">0</span>%</div>
+        </div>
+    </div>
+
     <svg class="svg-filters">
         <filter id="wave-filter">
             <feTurbulence id="turbulence" type="fractalNoise" baseFrequency="0.00001" numOctaves="2" result="noise" />
@@ -843,7 +951,6 @@
             <img src="cry1.png" class="hero-bg-slide" alt="Hero BG">
             <img src="tree4.jpg" class="hero-bg-slide" alt="Hero BG">
             <img src="tree5.jpg" class="hero-bg-slide" alt="Hero BG">
-            <img src="human1.jpg" class="hero-bg-slide" alt="Hero BG">
             <img src="map1.jpg" class="hero-bg-slide" alt="Hero BG">
         </div>
         <div class="hero-overlay"></div>
@@ -857,43 +964,43 @@
             <div class="project-image-box"><img src="firstphoto.jpg" alt="Graduation Design"></div>
             <!-- Using house.png as placeholder -->
             <div class="project-content">
-                <span>GRADUATION DESIGN</span>
+                <span>2O25 GRADUATION DESIGN</span>
                 <h3>阡陌</h3> <!-- Placeholder Title -->
                 <p>畢業設計專題。繪本｜模型｜設計｜計畫書 完整收錄。</p>
-            </div>
-        </div>
-
-        <div class="project-item" onclick="openBook('p3', 7)">
-            <div class="project-image-box"><img src="flower.png" alt=""></div>
-            <div class="project-content">
-                <span>COMPETITION</span>
-                <h3>The 5th National Youth Landscape Competition</h3>
-                <p>關於都市空間與人類行為的深度研究。透過數據分析與設計原型，探討未來居住環境的可能性。</p>
-            </div>
-        </div>
-
-        <div class="project-item" onclick="openBook('p2', 6)">
-            <div class="project-image-box"><img src="house.png" alt=""></div>
-            <div class="project-content">
-                <span>INTERN</span>
-                <h3>Bamboo construction ttakuban practical course</h3>
-                <p>第五屆全國青年景觀競賽作品。將永續系統與社區動線融合，創造兼具生態價值與公共性的城市綠廊。</p>
             </div>
         </div>
 
         <div class="project-item" onclick="openBook('p1', 8)">
             <div class="project-image-box"><img src="Protfolio01.png" alt=""></div>
             <div class="project-content">
-                <span>PROJECT 01</span>
+                <span>2024 PROJECT O1</span>
                 <h3>Wildfire Prevention Skyscraper</h3>
                 <p>建築學系學生成果輯錄。探索構造邏輯、空間界限與材質表現的對話。</p>
+            </div>
+        </div>
+
+        <div class="project-item" onclick="openBook('p2', 6)">
+            <div class="project-image-box"><img src="house.png" alt=""></div>
+            <div class="project-content">
+                <span>2O23 INTERN</span>
+                <h3>Bamboo construction ttakuban practical course</h3>
+                <p>第五屆全國青年景觀競賽作品。將永續系統與社區動線融合，創造兼具生態價值與公共性的城市綠廊。</p>
+            </div>
+        </div>
+
+        <div class="project-item" onclick="openBook('p3', 7)">
+            <div class="project-image-box"><img src="flower.png" alt=""></div>
+            <div class="project-content">
+                <span>2O23 COMPETITION</span>
+                <h3>The 5th National Youth Landscape Competition</h3>
+                <p>關於都市空間與人類行為的深度研究。透過數據分析與設計原型，探討未來居住環境的可能性。</p>
             </div>
         </div>
 
         <div class="project-item" onclick="openBook('p4', 9)">
             <div class="project-image-box"><img src="unity.png" alt=""></div>
             <div class="project-content">
-                <span>PROJECT 02</span>
+                <span>PROJECT O2</span>
                 <h3>UNITY PLAZA</h3>
                 <p>第五屆全國青年景觀競賽作品。將永續系統與社區動線融合，創造兼具生態價值與公共性的城市綠廊。</p>
             </div>
@@ -902,7 +1009,7 @@
         <div class="project-item" onclick="openBook('p5', 4)">
             <div class="project-image-box"><img src="garden.png" alt=""></div>
             <div class="project-content">
-                <span>PROJECT 03</span>
+                <span>PROJECT O3</span>
                 <h3>Modular Market Garden</h3>
                 <p>第五屆全國青年景觀競賽作品。將永續系統與社區動線融合，創造兼具生態價值與公共性的城市綠廊。</p>
             </div>
@@ -911,7 +1018,7 @@
         <div class="project-item" onclick="openBook('p6', 6)">
             <div class="project-image-box"><img src="tiny.png" alt=""></div>
             <div class="project-content">
-                <span>PROJECT 04</span>
+                <span>PROJECT O4</span>
                 <h3>Building a Tiny Box</h3>
                 <p>第五屆全國青年景觀競賽作品。將永續系統與社區動線融合，創造兼具生態價值與公共性的城市綠廊。</p>
             </div>
@@ -920,7 +1027,7 @@
         <div class="project-item" onclick="openBook('p7', 7)">
             <div class="project-image-box"><img src="Intergenerational.png" alt=""></div>
             <div class="project-content">
-                <span>PROJECT 05</span>
+                <span>PROJECT O5</span>
                 <h3>Intergenerational Co-living</h3>
                 <p>第五屆全國青年景觀競賽作品。將永續系統與社區動線融合，創造兼具生態價值與公共性的城市綠廊。</p>
             </div>
@@ -1096,7 +1203,7 @@
                         slides[curIndex].classList.remove('active');
                         curIndex = (curIndex + 1) % slides.length;
                         slides[curIndex].classList.add('active');
-                    }, 3000); // Change every 3 seconds
+                    }, 2800); // Change every 3 seconds
 
                 } else {
                     console.log("Closing Grad Menu");
@@ -1127,53 +1234,72 @@
                     'book': 20,     // Updated to 20 per user request
                     'model': 10,
                     'design': 10,
-                    'proposal': 10
+                    'proposal': 68
                 };
 
                 const folderName = `grad_${category}`;
 
                 toggleGradMenu(false); // Close menu, open book
                 setTimeout(() => {
-                    openBook(folderName, counts[category], 'jpg');
+                    const mode = category === 'proposal' ? 'spread' : 'single';
+                    openBook(folderName, counts[category], 'jpg', mode);
                     // Show Back Button explicitly for Grad projects
                     document.querySelector('.back-book').style.display = 'block';
                 }, 300);
             }
 
             // 3. 左右翻頁圖片瀏覽器
-            function openBook(folder, count, ext = 'png') {
+            function openBook(folder, count, ext = 'png', mode = 'single') {
                 // Reset state: Hide back button by default
                 document.querySelector('.back-book').style.display = 'none';
 
                 const viewer = document.getElementById('image-viewer');
                 viewer.innerHTML = '';
-                for (let i = 1; i <= count; i++) {
-                    const slide = document.createElement('div');
-                    slide.className = 'img-slide';
-                    const img = document.createElement('img');
 
-                    // Removed opacity handlers - rely on CSS for visibility to avoid glitches
-                    // img.onload = () => { img.style.opacity = "1"; };
-                    // img.onerror = () => {
-                    //     console.error("Failed to load image:", img.src);
-                    // Add visual error handling to diagnose GitHub path issues
-                    img.onerror = () => {
-                        console.error("Failed to load image:", img.src);
-                        const errorText = document.createElement('div');
-                        errorText.style.color = "white";
-                        errorText.style.position = "absolute";
-                        errorText.style.zIndex = "10";
-                        errorText.style.background = "rgba(255,0,0,0.5)";
-                        errorText.style.padding = "5px";
-                        // Display relative path to help debugging
-                        errorText.innerText = `Image not found: ${folder}/${i}.${ext}`;
-                        slide.appendChild(errorText);
-                    };
+                if (mode === 'spread') {
+                    viewer.classList.add('spread-mode');
 
-                    img.src = `${folder}/${i}.${ext}`;
-                    slide.appendChild(img);
-                    viewer.appendChild(slide);
+                    // Page 1: Single cover
+                    const coverSlide = document.createElement('div');
+                    coverSlide.className = 'img-slide';
+                    const wrapper = document.createElement('div');
+                    wrapper.className = 'zoom-wrapper';
+                    wrapper.appendChild(createImgElement(folder, 1, ext));
+                    coverSlide.appendChild(wrapper);
+                    viewer.appendChild(coverSlide);
+
+                    // Subsequent pages: Pair of images
+                    for (let i = 2; i <= count; i += 2) {
+                        const slide = document.createElement('div');
+                        slide.className = 'img-slide';
+                        const w = document.createElement('div');
+                        w.className = 'zoom-wrapper';
+
+                        // Left page
+                        w.appendChild(createImgElement(folder, i, ext));
+
+                        // Right page (if exists)
+                        if (i + 1 <= count) {
+                            w.appendChild(createImgElement(folder, i + 1, ext));
+                        }
+
+                        slide.appendChild(w);
+                        viewer.appendChild(slide);
+                    }
+
+                    initZoomLogic();
+                } else {
+                    viewer.classList.remove('spread-mode');
+                    // Existing single mode logic without zoom wrapper (can add if needed)
+                    for (let i = 1; i <= count; i++) {
+                        const slide = document.createElement('div');
+                        slide.className = 'img-slide';
+                        const img = createImgElement(folder, i, ext);
+                        slide.appendChild(img);
+                        viewer.appendChild(slide);
+                    }
                 }
+
                 const overlay = document.getElementById('book-overlay');
                 overlay.style.display = 'block';
                 setTimeout(() => overlay.classList.add('active'), 10);
@@ -1181,7 +1307,120 @@
                 viewer.scrollLeft = 0;
             }
 
+            // --- NEW: Zoom & Pan Logic ---
+            let zoomStates = new Map(); // WeakMap better if elements removed, but viewer cleared every time
+
+            function initZoomLogic() {
+                const viewer = document.getElementById('image-viewer');
+
+                viewer.onwheel = (e) => {
+                    const slide = getActiveSlide();
+                    if (!slide) return;
+                    const wrapper = slide.querySelector('.zoom-wrapper');
+                    if (!wrapper) return;
+
+                    e.preventDefault();
+
+                    let state = zoomStates.get(wrapper) || { scale: 1, x: 0, y: 0 };
+                    const delta = -e.deltaY;
+                    const factor = delta > 0 ? 1.1 : 0.9;
+
+                    state.scale *= factor;
+                    state.scale = Math.min(Math.max(1, state.scale), 4);
+
+                    if (state.scale === 1) {
+                        state.x = 0;
+                        state.y = 0;
+                    }
+
+                    zoomStates.set(wrapper, state);
+                    applyTransform(wrapper, state);
+                };
+
+                // Pan Logic
+                let isDragging = false;
+                let startX, startY;
+
+                viewer.onmousedown = (e) => {
+                    const slide = getActiveSlide();
+                    const wrapper = slide?.querySelector('.zoom-wrapper');
+                    if (!wrapper) return;
+
+                    let state = zoomStates.get(wrapper);
+                    if (!state || state.scale <= 1) return;
+
+                    isDragging = true;
+                    wrapper.classList.add('dragging');
+                    startX = e.clientX - state.x;
+                    startY = e.clientY - state.y;
+                };
+
+                window.onmousemove = (e) => {
+                    if (!isDragging) return;
+                    const slide = getActiveSlide();
+                    const wrapper = slide?.querySelector('.zoom-wrapper');
+                    if (!wrapper) return;
+
+                    let state = zoomStates.get(wrapper);
+                    state.x = e.clientX - startX;
+                    state.y = e.clientY - startY;
+
+                    applyTransform(wrapper, state);
+                };
+
+                window.onmouseup = () => {
+                    if (!isDragging) return;
+                    isDragging = false;
+                    const wrappers = document.querySelectorAll('.zoom-wrapper');
+                    wrappers.forEach(w => w.classList.remove('dragging'));
+                };
+            }
+
+            function getActiveSlide() {
+                const viewer = document.getElementById('image-viewer');
+                const slides = viewer.querySelectorAll('.img-slide');
+                const scrollLeft = viewer.scrollLeft;
+                const index = Math.round(scrollLeft / window.innerWidth);
+                return slides[index];
+            }
+
+            function applyTransform(el, state) {
+                el.style.transform = `translate(${state.x}px, ${state.y}px) scale(${state.scale})`;
+            }
+
+            function resetAllZooms() {
+                zoomStates.clear();
+                document.querySelectorAll('.zoom-wrapper').forEach(w => {
+                    w.style.transform = 'none';
+                });
+            }
+
+            // Reset zoom when resizing or scrolling to new slide
+            document.getElementById('image-viewer').addEventListener('scroll', () => {
+                // Potential optimization: only reset if scale > 1
+                // For now, simple approach: reset if moving away significantly
+            }, { passive: true });
+
+            function createImgElement(folder, i, ext) {
+                const img = document.createElement('img');
+                img.loading = 'lazy';      // Defer loading off-screen images
+                img.decoding = 'async';    // Non-blocking image decoding
+                img.onerror = () => {
+                    console.error("Failed to load image:", img.src);
+                    const errorText = document.createElement('div');
+                    errorText.style.color = "white";
+                    errorText.style.position = "absolute";
+                    errorText.style.background = "rgba(255,0,0,0.5)";
+                    errorText.style.padding = "5px";
+                    errorText.innerText = `Image not found: ${folder}/${i}.${ext}`;
+                    img.parentNode.appendChild(errorText); // Append to slide
+                };
+                img.src = `${folder}/${i}.${ext}`;
+                return img;
+            }
+
             function moveSlide(direction) {
+                resetAllZooms(); // Reset zoom when moving to another page
                 const viewer = document.getElementById('image-viewer');
                 viewer.scrollBy({ left: direction * window.innerWidth, behavior: 'smooth' });
             }
@@ -1216,6 +1455,46 @@
                     }, 3000); // Switch every 3 seconds
                 }
             });
+
+            // --- NEW: Loader Logic ---
+            function initLoader() {
+                const loader = document.getElementById('loader');
+                const percentText = document.getElementById('percent');
+                const archLine = document.getElementById('arch-line');
+
+                // Animate SVG path
+                gsap.to(archLine, {
+                    strokeDashoffset: 0,
+                    duration: 2,
+                    ease: "power1.inOut",
+                    repeat: -1,
+                    yoyo: true
+                });
+
+                let progress = 0;
+                const interval = setInterval(() => {
+                    progress += Math.floor(Math.random() * 5) + 2;
+                    if (progress >= 100) {
+                        progress = 100;
+                        clearInterval(interval);
+
+                        gsap.to(loader, {
+                            opacity: 0,
+                            duration: 1,
+                            ease: "power2.inOut",
+                            onComplete: () => {
+                                loader.style.display = 'none';
+                                document.body.style.overflow = 'auto'; // Re-enable scroll
+                            }
+                        });
+                    }
+                    percentText.innerText = progress;
+                }, 80);
+            }
+
+            // Ensure body overflow is hidden during load
+            document.body.style.overflow = 'hidden';
+            window.addEventListener('load', initLoader);
         </script>
 </body>
 
