@@ -4,6 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="format-detection" content="telephone=no">
     <title>Ravyn | Tsai Cho Lin Portfolio</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
@@ -19,6 +20,16 @@
             padding: 0;
             box-sizing: border-box;
             -webkit-tap-highlight-color: transparent;
+            /* Disable selection and dragging to protect content */
+            user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -webkit-user-drag: none;
+        }
+
+        html,
+        body {
+            cursor: url('./todo.png') 0 0, auto !important;
         }
 
         body {
@@ -30,6 +41,27 @@
             line-height: 1.6;
             /* Recalibrated: 16px @ 1920px ~= 0.83vw */
             font-size: 0.83vw;
+        }
+
+        /* Ensure links and interactive elements also use the custom cursor */
+        a,
+        .nav-link,
+        .project-item,
+        .grad-item,
+        .back-book,
+        .close-book,
+        .close-btn,
+        .nav-arrow,
+        button,
+        [onclick] {
+            cursor: url('./todo.png') 0 0, pointer !important;
+        }
+
+        /* Prevent phone numbers from being styled as links on mobile */
+        [href^="tel:"],
+        a[href^="tel:"] {
+            color: inherit !important;
+            text-decoration: none !important;
         }
 
         /* --- 導覽列 --- */
@@ -252,20 +284,22 @@
             overflow-x: auto;
             overflow-y: hidden;
             scroll-snap-type: x mandatory;
+            -webkit-scroll-snap-type: x mandatory;
             scroll-behavior: smooth;
             -webkit-overflow-scrolling: touch;
-            /* Enable smooth scrolling on iOS */
+            scroll-padding: 0;
         }
 
         .img-slide {
-            min-width: 100vw;
+            width: 100vw;
+            flex-shrink: 0;
             height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
-            scroll-snap-align: start;
-            flex-shrink: 0;
-            /* Critical: Prevent slides from shrinking */
+            scroll-snap-align: center;
+            overflow: hidden;
+            contain: layout;
         }
 
         #image-viewer img {
@@ -644,8 +678,24 @@
         }
 
         .grad-item:hover {
-            background: #fff;
             transform: translateY(-10px);
+            border-color: rgba(255, 255, 255, 0.8);
+        }
+
+        .item-book:hover {
+            background: url('midle.png') center/cover no-repeat;
+        }
+
+        .item-model:hover {
+            background: url('modelmenu.JPG') center/cover no-repeat;
+        }
+
+        .item-proposal:hover {
+            background: url('proposal.jpg') center/cover no-repeat;
+        }
+
+        .item-design:hover {
+            background: url('kai.png') center/cover no-repeat;
         }
 
         .grad-item h4 {
@@ -660,8 +710,9 @@
         }
 
         .grad-item:hover h4 {
-            color: #000;
+            color: #fff;
             font-weight: 500;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.8);
         }
 
         .grad-close {
@@ -677,6 +728,109 @@
 
         .grad-close:hover {
             color: #fff;
+        }
+
+        /* --- 照片牆模式 (Collage Mode) --- */
+        #collage-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #050505;
+            display: none;
+            z-index: 4000;
+            overflow: hidden;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+
+        #collage-overlay.active {
+            opacity: 1;
+        }
+
+        #collage-container {
+            width: 100%;
+            height: 100%;
+            position: relative;
+        }
+
+        .collage-item {
+            position: absolute;
+            /* Width set dynamically via JS */
+            background: #fff;
+            padding: 5px 5px 20px 5px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4);
+            cursor: grab;
+            transition: transform 0.3s cubic-bezier(0.2, 0, 0.2, 1);
+            user-select: none;
+            will-change: transform, top, left;
+        }
+
+        .collage-item:hover {
+            transform: scale(1.05) !important;
+            z-index: 1000 !important;
+            box-shadow: 0 20px 45px rgba(0, 0, 0, 0.6);
+        }
+
+        .collage-item:active {
+            cursor: grabbing;
+            transition: scale 0.2s ease;
+        }
+
+        .collage-item img {
+            width: 100%;
+            height: auto;
+            display: block;
+            pointer-events: none;
+            /* Prevent image dragging interference */
+            filter: grayscale(20%);
+            transition: 0.3s;
+        }
+
+        .collage-item:hover img {
+            filter: grayscale(0%);
+        }
+
+        /* --- 照片牆燈箱 (Collage Lightbox) --- */
+        #collage-lightbox {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            display: none;
+            z-index: 5000;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            transition: opacity 0.4s ease;
+            cursor: zoom-out;
+        }
+
+        #collage-lightbox.active {
+            opacity: 1;
+        }
+
+        #collage-lightbox img {
+            max-width: 90%;
+            max-height: 90%;
+            object-fit: contain;
+            box-shadow: 0 0 50px rgba(0, 0, 0, 0.8);
+            transform: scale(0.9);
+            transition: transform 0.4s cubic-bezier(0.2, 0, 0.2, 1);
+        }
+
+        #collage-lightbox.active img {
+            transform: scale(1);
+        }
+
+        @media (max-width: 768px) {
+            .collage-item {
+                /* Width set dynamically via JS */
+                padding: 4px 4px 15px 4px;
+            }
         }
 
         @media (max-width: 768px) {
@@ -952,6 +1106,7 @@
             <img src="tree4.jpg" class="hero-bg-slide" alt="Hero BG">
             <img src="tree5.jpg" class="hero-bg-slide" alt="Hero BG">
             <img src="map1.jpg" class="hero-bg-slide" alt="Hero BG">
+            <img src="carton.png" class="hero-bg-slide" alt="Hero BG">
         </div>
         <div class="hero-overlay"></div>
         <h1>PORTFOLIO</h1>
@@ -966,7 +1121,8 @@
             <div class="project-content">
                 <span>2O25 GRADUATION DESIGN</span>
                 <h3>阡陌</h3> <!-- Placeholder Title -->
-                <p>畢業設計專題。繪本｜模型｜設計｜計畫書 完整收錄。</p>
+                <p>從農業的探討，到都市尺度空間的剖析，以及多族群的融入，讓人們透過一連串空間的體驗，喚起對生態、原野的歸屬；將既有農業再提升，尋回緊密的鄰里關係；有意識地創造一個集體對於未來生活型態的精神，打造一個與自然共生與族群共榮的融合介面。
+                </p>
             </div>
         </div>
 
@@ -975,7 +1131,8 @@
             <div class="project-content">
                 <span>2024 PROJECT O1</span>
                 <h3>Wildfire Prevention Skyscraper</h3>
-                <p>建築學系學生成果輯錄。探索構造邏輯、空間界限與材質表現的對話。</p>
+                <p>這座防火摩天大樓旨在應對森林火災風險，特別是北加州等高風險地區。大樓採用先進技術，如無人機進行預防性滅火，並使用新型環保阻燃液體，長時間附著於植被上，提供持久防火效果。此外，無人機還將當地原生植物運送至火災區域，協助生態恢復。建築內設有逃生指示無人機系統，確保火災時提供清晰指引。設計還結合防火牧場，利用山羊放牧清除可燃植物，建立自然防火線。
+                </p>
             </div>
         </div>
 
@@ -1089,6 +1246,16 @@
             <div id="image-viewer"></div>
         </div>
 
+        <div id="collage-overlay">
+            <div class="back-book" onclick="backToGradMenu()">BACK</div>
+            <div class="close-book" onclick="closeBook()">CLOSE ✕</div>
+            <div id="collage-container"></div>
+        </div>
+
+        <div id="collage-lightbox" onclick="closeCollageLightbox()">
+            <img src="" id="lightbox-img" alt="Enlarged Model Photo">
+        </div>
+
         <footer>© 2026 TSAI CHO LIN. ALL RIGHTS RESERVED.</footer>
 
         <!-- Graduation Selection Menu -->
@@ -1105,17 +1272,17 @@
             <div class="grad-close" onclick="toggleGradMenu(false)">CLOSE ✕</div>
             <div class="grad-title">GRADUATION DESIGN</div>
             <div class="grad-options">
-                <div class="grad-item" onclick="openGradBook('book')">
+                <div class="grad-item item-book" onclick="openGradBook('book')">
                     <h4>Picture Book<br>繪本</h4>
                 </div>
-                <div class="grad-item" onclick="openGradBook('model')">
-                    <h4>Model Photos<br>模型照片</h4>
+                <div class="grad-item item-proposal" onclick="openGradBook('proposal')">
+                    <h4>Proposal<br>計劃書</h4>
                 </div>
-                <div class="grad-item" onclick="openGradBook('design')">
+                <div class="grad-item item-design" onclick="openGradBook('design')">
                     <h4>Design<br>設計圖面</h4>
                 </div>
-                <div class="grad-item" onclick="openGradBook('proposal')">
-                    <h4>Proposal<br>計畫書</h4>
+                <div class="grad-item item-model" onclick="openGradBook('model')">
+                    <h4>Model<br>模型</h4>
                 </div>
             </div>
         </div>
@@ -1220,10 +1387,17 @@
             }
 
             function backToGradMenu() {
-                // Close viewer
-                const overlay = document.getElementById('book-overlay');
-                overlay.classList.remove('active');
-                setTimeout(() => { overlay.style.display = 'none'; }, 300);
+                // Close viewers
+                const bookOverlay = document.getElementById('book-overlay');
+                const collageOverlay = document.getElementById('collage-overlay');
+
+                bookOverlay.classList.remove('active');
+                collageOverlay.classList.remove('active');
+
+                setTimeout(() => {
+                    bookOverlay.style.display = 'none';
+                    collageOverlay.style.display = 'none';
+                }, 300);
 
                 // Re-open Menu
                 toggleGradMenu(true);
@@ -1231,7 +1405,7 @@
 
             function openGradBook(category) {
                 const counts = {
-                    'book': 20,     // Updated to 20 per user request
+                    'book': 20,
                     'model': 10,
                     'design': 10,
                     'proposal': 68
@@ -1239,11 +1413,16 @@
 
                 const folderName = `grad_${category}`;
 
-                toggleGradMenu(false); // Close menu, open book
+                toggleGradMenu(false); // Close menu
                 setTimeout(() => {
-                    const mode = category === 'proposal' ? 'spread' : 'single';
-                    openBook(folderName, counts[category], 'jpg', mode);
-                    // Show Back Button explicitly for Grad projects
+                    if (category === 'model') {
+                        openCollageViewer(folderName, counts[category]);
+                    } else {
+                        const isMob = window.innerWidth <= 768;
+                        const mode = (category === 'proposal' && !isMob) ? 'spread' : 'single';
+                        openBook(folderName, counts[category], 'jpg', mode);
+                        // Show Back Button explicitly for Grad projects
+                    }
                     document.querySelector('.back-book').style.display = 'block';
                 }, 300);
             }
@@ -1286,25 +1465,157 @@
                         slide.appendChild(w);
                         viewer.appendChild(slide);
                     }
-
-                    initZoomLogic();
                 } else {
                     viewer.classList.remove('spread-mode');
-                    // Existing single mode logic without zoom wrapper (can add if needed)
                     for (let i = 1; i <= count; i++) {
                         const slide = document.createElement('div');
                         slide.className = 'img-slide';
-                        const img = createImgElement(folder, i, ext);
-                        slide.appendChild(img);
+                        const w = document.createElement('div');
+                        w.className = 'zoom-wrapper';
+                        w.appendChild(createImgElement(folder, i, ext));
+                        slide.appendChild(w);
                         viewer.appendChild(slide);
                     }
                 }
 
+                initZoomLogic(); // Enable zoom for both modes
                 const overlay = document.getElementById('book-overlay');
                 overlay.style.display = 'block';
                 setTimeout(() => overlay.classList.add('active'), 10);
                 document.body.style.overflow = 'hidden';
                 viewer.scrollLeft = 0;
+            }
+
+            // --- 照片牆邏輯 (Collage Logic) ---
+            let collageZ = 100;
+
+            function openCollageViewer(folder, count) {
+                const overlay = document.getElementById('collage-overlay');
+                const container = document.getElementById('collage-container');
+                container.innerHTML = ''; // Clear old
+
+                // Show overlay
+                overlay.style.display = 'block';
+                setTimeout(() => overlay.classList.add('active'), 10);
+                document.body.style.overflow = 'hidden';
+
+                for (let i = 1; i <= count; i++) {
+                    const item = document.createElement('div');
+                    item.className = 'collage-item';
+                    item.style.opacity = '0'; // Hide initially for smooth fade-in
+                    item.style.transition = 'opacity 0.5s ease, transform 0.3s cubic-bezier(0.2, 0, 0.2, 1)';
+
+                    const img = createImgElement(folder, i, 'jpg');
+                    item.appendChild(img);
+                    container.appendChild(item);
+
+                    // Wait for image to load to detect proportions
+                    img.onload = () => {
+                        const isPortrait = img.naturalHeight > img.naturalWidth;
+                        const isMob = window.innerWidth < 768;
+
+                        // Smart sizing based on orientation
+                        let minW, maxW;
+                        if (isPortrait) {
+                            minW = isMob ? 150 : 250;
+                            maxW = isMob ? 220 : 330;
+                        } else {
+                            minW = isMob ? 200 : 350;
+                            maxW = isMob ? 320 : 520;
+                        }
+
+                        const itemW = minW + Math.random() * (maxW - minW);
+                        item.style.width = `${itemW}px`;
+
+                        // Boundary calculation
+                        const itemH = (img.naturalHeight / img.naturalWidth) * itemW;
+                        const maxX = window.innerWidth - itemW - 40;
+                        const maxY = window.innerHeight - (itemH + 30) - 40;
+
+                        const randX = 20 + Math.random() * maxX;
+                        const randY = 20 + Math.random() * maxY;
+                        const randRot = (Math.random() - 0.5) * 30;
+
+                        item.style.left = `${randX}px`;
+                        item.style.top = `${randY}px`;
+                        item.style.transform = `rotate(${randRot}deg)`;
+                        item.style.opacity = '1';
+
+                        initCollageDrag(item);
+                    };
+                }
+            }
+
+            function initCollageDrag(el) {
+                let isDragging = false;
+                let startX, startY;
+
+                const startMove = (e) => {
+                    isDragging = false; // Reset on start
+                    const event = e.touches ? e.touches[0] : e;
+                    startX = event.clientX;
+                    startY = event.clientY;
+
+                    const initialOffsetLeft = el.offsetLeft;
+                    const initialOffsetTop = el.offsetTop;
+
+                    const onMouseMove = (moveEvent) => {
+                        const mEvent = moveEvent.touches ? moveEvent.touches[0] : moveEvent;
+                        const dx = mEvent.clientX - startX;
+                        const dy = mEvent.clientY - startY;
+
+                        if (!isDragging && (Math.abs(dx) > 5 || Math.abs(dy) > 5)) {
+                            isDragging = true;
+                            el.style.zIndex = ++collageZ;
+                            el.style.transition = 'none';
+                            el.style.cursor = 'grabbing';
+                        }
+
+                        if (isDragging) {
+                            el.style.left = `${initialOffsetLeft + dx}px`;
+                            el.style.top = `${initialOffsetTop + dy}px`;
+                        }
+                    };
+
+                    const onMouseUp = () => {
+                        window.removeEventListener('mousemove', onMouseMove);
+                        window.removeEventListener('mouseup', onMouseUp);
+                        window.removeEventListener('touchmove', onMouseMove);
+                        window.removeEventListener('touchend', onMouseUp);
+
+                        if (!isDragging) {
+                            // It was a click!
+                            openCollageLightbox(el.querySelector('img').src);
+                        } else {
+                            el.style.transition = 'transform 0.3s cubic-bezier(0.2, 0, 0.2, 1)';
+                            el.style.cursor = 'grab';
+                        }
+                    };
+
+                    window.addEventListener('mousemove', onMouseMove);
+                    window.addEventListener('mouseup', onMouseUp);
+                    window.addEventListener('touchmove', onMouseMove, { passive: false });
+                    window.addEventListener('touchend', onMouseUp);
+                };
+
+                el.addEventListener('mousedown', startMove);
+                el.addEventListener('touchstart', startMove, { passive: true });
+            }
+
+            function openCollageLightbox(src) {
+                const lightbox = document.getElementById('collage-lightbox');
+                const img = document.getElementById('lightbox-img');
+                img.src = src;
+                lightbox.style.display = 'flex';
+                setTimeout(() => lightbox.classList.add('active'), 10);
+            }
+
+            function closeCollageLightbox() {
+                const lightbox = document.getElementById('collage-lightbox');
+                lightbox.classList.remove('active');
+                setTimeout(() => {
+                    lightbox.style.display = 'none';
+                }, 400);
             }
 
             // --- NEW: Zoom & Pan Logic ---
@@ -1426,9 +1737,16 @@
             }
 
             function closeBook() {
-                const overlay = document.getElementById('book-overlay');
-                overlay.classList.remove('active');
-                setTimeout(() => { overlay.style.display = 'none'; }, 400);
+                const bookOverlay = document.getElementById('book-overlay');
+                const collageOverlay = document.getElementById('collage-overlay');
+
+                bookOverlay.classList.remove('active');
+                collageOverlay.classList.remove('active');
+
+                setTimeout(() => {
+                    bookOverlay.style.display = 'none';
+                    collageOverlay.style.display = 'none';
+                }, 400);
                 document.body.style.overflow = 'auto';
             }
 
@@ -1491,6 +1809,20 @@
                     percentText.innerText = progress;
                 }, 80);
             }
+
+            // --- NEW: Basic Content Protection ---
+            document.addEventListener('contextmenu', (e) => e.preventDefault()); // Disable right-click
+
+            document.addEventListener('keydown', (e) => {
+                // Disable F12
+                if (e.key === 'F12') {
+                    e.preventDefault();
+                }
+                // Disable Ctrl+Shift+I, Ctrl+Shift+J, Ctrl+U
+                if (e.ctrlKey && (e.shiftKey && (e.key === 'I' || e.key === 'J') || e.key === 'u')) {
+                    e.preventDefault();
+                }
+            });
 
             // Ensure body overflow is hidden during load
             document.body.style.overflow = 'hidden';
