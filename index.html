@@ -1100,13 +1100,13 @@
 
     <section class="hero">
         <div class="hero-bg-slider">
-            <img src="tree1.jpg" class="hero-bg-slide" alt="Hero BG">
-            <img src="tree2.jpg" class="hero-bg-slide" alt="Hero BG">
-            <img src="cry1.png" class="hero-bg-slide" alt="Hero BG">
-            <img src="tree4.jpg" class="hero-bg-slide" alt="Hero BG">
-            <img src="tree5.jpg" class="hero-bg-slide" alt="Hero BG">
-            <img src="map1.jpg" class="hero-bg-slide" alt="Hero BG">
-            <img src="carton.png" class="hero-bg-slide" alt="Hero BG">
+            <img src="tree1.jpg" class="hero-bg-slide" alt="Hero BG" fetchpriority="high">
+            <img data-src="tree2.jpg" class="hero-bg-slide" alt="Hero BG">
+            <img data-src="cry1.png" class="hero-bg-slide" alt="Hero BG">
+            <img data-src="tree4.jpg" class="hero-bg-slide" alt="Hero BG">
+            <img data-src="tree5.jpg" class="hero-bg-slide" alt="Hero BG">
+            <img data-src="map1.jpg" class="hero-bg-slide" alt="Hero BG">
+            <img data-src="carton.png" class="hero-bg-slide" alt="Hero BG">
         </div>
         <div class="hero-overlay"></div>
         <h1>PORTFOLIO</h1>
@@ -1261,11 +1261,11 @@
         <!-- Graduation Selection Menu -->
         <div id="grad-menu">
             <div class="grad-bg-slider">
-                <img src="tree1.jpg" class="grad-bg-slide active" alt="bg">
-                <img src="tree2.jpg" class="grad-bg-slide" alt="bg">
-                <img src="tree3.jpg" class="grad-bg-slide" alt="bg">
-                <img src="tree4.jpg" class="grad-bg-slide" alt="bg">
-                <img src="tree5.jpg" class="grad-bg-slide" alt="bg">
+                <img src="tree1.jpg" class="grad-bg-slide active" alt="bg" fetchpriority="high">
+                <img data-src="tree2.jpg" class="grad-bg-slide" alt="bg">
+                <img data-src="tree3.jpg" class="grad-bg-slide" alt="bg">
+                <img data-src="tree4.jpg" class="grad-bg-slide" alt="bg">
+                <img data-src="tree5.jpg" class="grad-bg-slide" alt="bg">
             </div>
             <div class="grad-overlay"></div>
 
@@ -1369,7 +1369,15 @@
                     gradInterval = setInterval(() => {
                         slides[curIndex].classList.remove('active');
                         curIndex = (curIndex + 1) % slides.length;
-                        slides[curIndex].classList.add('active');
+
+                        // Performance: Check and load data-src if exists
+                        const nextSlide = slides[curIndex];
+                        if (nextSlide.dataset.src) {
+                            nextSlide.src = nextSlide.dataset.src;
+                            nextSlide.removeAttribute('data-src');
+                        }
+
+                        nextSlide.classList.add('active');
                     }, 2800); // Change every 3 seconds
 
                 } else {
@@ -1405,7 +1413,7 @@
 
             function openGradBook(category) {
                 const counts = {
-                    'book': 20,
+                    'book': 26,
                     'model': 10,
                     'design': 10,
                     'proposal': 68
@@ -1438,7 +1446,7 @@
                 if (mode === 'spread') {
                     viewer.classList.add('spread-mode');
 
-                    // Page 1: Single cover
+                    // 1. Load cover page immediately
                     const coverSlide = document.createElement('div');
                     coverSlide.className = 'img-slide';
                     const wrapper = document.createElement('div');
@@ -1447,34 +1455,47 @@
                     coverSlide.appendChild(wrapper);
                     viewer.appendChild(coverSlide);
 
-                    // Subsequent pages: Pair of images
-                    for (let i = 2; i <= count; i += 2) {
-                        const slide = document.createElement('div');
-                        slide.className = 'img-slide';
-                        const w = document.createElement('div');
-                        w.className = 'zoom-wrapper';
-
-                        // Left page
-                        w.appendChild(createImgElement(folder, i, ext));
-
-                        // Right page (if exists)
-                        if (i + 1 <= count) {
-                            w.appendChild(createImgElement(folder, i + 1, ext));
+                    const loadSpreads = (start, end) => {
+                        for (let i = start; i <= end; i += 2) {
+                            const slide = document.createElement('div');
+                            slide.className = 'img-slide';
+                            const w = document.createElement('div');
+                            w.className = 'zoom-wrapper';
+                            w.appendChild(createImgElement(folder, i, ext));
+                            if (i + 1 <= count) w.appendChild(createImgElement(folder, i + 1, ext));
+                            slide.appendChild(w);
+                            viewer.appendChild(slide);
                         }
+                    };
 
-                        slide.appendChild(w);
-                        viewer.appendChild(slide);
+                    // 2. Load first few spreads (up to page 5-7) immediately
+                    const initialTotal = Math.min(5, count);
+                    loadSpreads(2, initialTotal);
+
+                    // 3. Load remaining spreads after a tiny delay
+                    if (count > initialTotal) {
+                        setTimeout(() => loadSpreads(initialTotal + 1, count), 150);
                     }
                 } else {
                     viewer.classList.remove('spread-mode');
-                    for (let i = 1; i <= count; i++) {
-                        const slide = document.createElement('div');
-                        slide.className = 'img-slide';
-                        const w = document.createElement('div');
-                        w.className = 'zoom-wrapper';
-                        w.appendChild(createImgElement(folder, i, ext));
-                        slide.appendChild(w);
-                        viewer.appendChild(slide);
+
+                    const loadSingle = (start, end) => {
+                        for (let i = start; i <= end; i++) {
+                            const slide = document.createElement('div');
+                            slide.className = 'img-slide';
+                            const w = document.createElement('div');
+                            w.className = 'zoom-wrapper';
+                            w.appendChild(createImgElement(folder, i, ext));
+                            slide.appendChild(w);
+                            viewer.appendChild(slide);
+                        }
+                    };
+
+                    // Load first 5 pages, then rest
+                    const initial = Math.min(5, count);
+                    loadSingle(1, initial);
+                    if (count > initial) {
+                        setTimeout(() => loadSingle(initial + 1, count), 150);
                     }
                 }
 
@@ -1769,7 +1790,15 @@
                     setInterval(() => {
                         heroSlides[heroIndex].classList.remove('active');
                         heroIndex = (heroIndex + 1) % heroSlides.length;
-                        heroSlides[heroIndex].classList.add('active');
+
+                        // Performance: Check and load data-src if exists
+                        const nextSlide = heroSlides[heroIndex];
+                        if (nextSlide.dataset.src) {
+                            nextSlide.src = nextSlide.dataset.src;
+                            nextSlide.removeAttribute('data-src');
+                        }
+
+                        nextSlide.classList.add('active');
                     }, 3000); // Switch every 3 seconds
                 }
             });
@@ -1810,6 +1839,21 @@
                 }, 80);
             }
 
+            // --- NEW: Menu Hover Images Preloader ---
+            function preloadMenuImages() {
+                const hoverImages = [
+                    'midle.png',
+                    'modelmenu.JPG',
+                    'proposal.jpg',
+                    'kai.png'
+                ];
+                hoverImages.forEach(img => {
+                    const i = new Image();
+                    i.src = img;
+                });
+                console.log("Menu hover images preloaded.");
+            }
+
             // --- NEW: Basic Content Protection ---
             document.addEventListener('contextmenu', (e) => e.preventDefault()); // Disable right-click
 
@@ -1826,7 +1870,11 @@
 
             // Ensure body overflow is hidden during load
             document.body.style.overflow = 'hidden';
-            window.addEventListener('load', initLoader);
+            window.addEventListener('load', () => {
+                initLoader();
+                // Delay preloading slightly after initial load to prioritize main assets
+                setTimeout(preloadMenuImages, 2000);
+            });
         </script>
 </body>
 
