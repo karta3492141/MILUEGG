@@ -1706,8 +1706,8 @@
 
                 // --- 智慧置中與尺寸優化 ---
                 const containerW = window.innerWidth;
-                const itemW = isMob ? 135 : 160;
-                const spacing = isMob ? 155 : 185;
+                const itemW = isMob ? 110 : 160;
+                const spacing = isMob ? 130 : 185;
 
                 let itemsPerRow = Math.floor((containerW - (isMob ? 20 : 60)) / spacing);
                 if (itemsPerRow < 1) itemsPerRow = 1;
@@ -1724,7 +1724,7 @@
                 const col = hungCount % itemsPerRow;
 
                 const targetLeft = startLeft + (col * spacing);
-                const targetTop = ropeTop - (isMob ? 8 : 10) + (row * (isMob ? 180 : 230));
+                const targetTop = ropeTop - (isMob ? 8 : 10) + (row * (isMob ? 150 : 230));
 
                 el.style.transition = 'all 0.8s cubic-bezier(0.34, 1.56, 0.64, 1)';
                 el.style.width = `${itemW}px`;
