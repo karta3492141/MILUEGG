@@ -289,6 +289,7 @@
             scroll-behavior: smooth;
             -webkit-overflow-scrolling: touch;
             scroll-padding: 0;
+            background-color: #000;
         }
 
         .img-slide {
@@ -302,8 +303,13 @@
             overflow-x: scroll;
             /* Enable horizontal swipe */
             overflow-y: hidden;
-            contain: layout;
-            /* touch-action: none; REMOVED to allow native swipe */
+            /* contain: layout; REMOVED */
+
+            background-color: #000;
+            -webkit-backface-visibility: hidden;
+            backface-visibility: hidden;
+            transform: translate3d(0, 0, 0);
+            -webkit-transform: translate3d(0, 0, 0);
         }
 
         #image-viewer img {
@@ -333,10 +339,12 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: transform 0.1s ease-out;
             transform-origin: center center;
             cursor: grab;
             user-select: none;
+
+            will-change: auto;
+            transition: transform 0.3s cubic-bezier(0.2, 0, 0.2, 1);
         }
 
         .zoom-wrapper.dragging {
@@ -2414,8 +2422,8 @@
 
             function createImgElement(folder, i, ext) {
                 const img = document.createElement('img');
-                img.loading = 'lazy';
-                img.decoding = 'async';
+                img.loading = 'eager'; // User request: eager
+                img.decoding = 'sync'; // User request: sync (prevent flash)
                 img.dataset.fallbackStage = '0';
 
                 img.onerror = function () {
