@@ -1502,7 +1502,7 @@
                         const isMob = window.innerWidth <= 768;
                         let mode = 'single';
                         if (category === 'proposal' && !isMob) mode = 'spread';
-                        if (category === 'design') mode = 'vertical';
+                        if (category === 'design' && !isMob) mode = 'vertical';
 
                         const ext = category === 'design' ? 'jpg' : 'webp';
                         openBook(folderName, counts[category], ext, mode);
