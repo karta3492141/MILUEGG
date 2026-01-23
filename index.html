@@ -2159,6 +2159,10 @@
             function initZoomLogic() {
                 const viewer = document.getElementById('image-viewer');
 
+                // Limit max scale on mobile to prevent memory crash/flickering
+                const IS_MOBILE = window.innerWidth <= 768;
+                const MAX_SCALE = IS_MOBILE ? 3 : 12;
+
                 // Wheel Zoom (Desktop) with Mouse-Following Pan Calculation
                 viewer.onwheel = (e) => {
                     const slide = getActiveSlide();
@@ -2183,7 +2187,7 @@
 
                     const oldScale = state.scale;
                     let newScale = oldScale * factor;
-                    newScale = Math.min(Math.max(1, newScale), 12);
+                    newScale = Math.min(Math.max(1, newScale), MAX_SCALE);
 
                     const ratio = newScale / oldScale;
 
@@ -2353,10 +2357,12 @@
                             e.touches[0].clientY - e.touches[1].clientY
                         );
                         const scaleFactor = dist / touchPinchStart.dist;
-                        state.scale = Math.min(Math.max(1, touchPinchStart.scale * scaleFactor), 12);
+                        state.scale = Math.min(Math.max(1, touchPinchStart.scale * scaleFactor), MAX_SCALE);
 
-                        if (state.scale === 1) {
-                            state.x = 0; state.y = 0;
+                        if (state.scale <= 1.1) {
+                            state.scale = 1;
+                            state.x = 0;
+                            state.y = 0;
                         }
 
                         zoomStates.set(wrapper, state);
