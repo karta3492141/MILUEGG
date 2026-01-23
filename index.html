@@ -299,10 +299,11 @@
             justify-content: center;
             align-items: center;
             scroll-snap-align: center;
-            overflow: hidden;
+            overflow-x: scroll;
+            /* Enable horizontal swipe */
+            overflow-y: hidden;
             contain: layout;
-            touch-action: none;
-            /* Prevent native pinch/scroll conflict */
+            /* touch-action: none; REMOVED to allow native swipe */
         }
 
         #image-viewer img {
@@ -2306,6 +2307,9 @@
                     const wrapper = slide?.querySelector('.zoom-wrapper');
                     if (!wrapper) return;
 
+                    // Dynamic GPU: Enable for smooth interaction
+                    wrapper.style.willChange = 'transform';
+
                     let state = zoomStates.get(wrapper) || { scale: 1, x: 0, y: 0 };
 
                     if (e.touches.length === 1) {
@@ -2370,6 +2374,15 @@
                     }
                     if (e.touches.length === 0) {
                         isTouchDragging = false;
+
+                        // Dynamic GPU: Disable correctly to allow re-rasterization (Sharpen image)
+                        const slide = getActiveSlide();
+                        const wrapper = slide?.querySelector('.zoom-wrapper');
+                        if (wrapper) {
+                            setTimeout(() => {
+                                wrapper.style.willChange = 'auto';
+                            }, 100);
+                        }
                     }
                 });
             }
