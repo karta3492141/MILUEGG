@@ -311,7 +311,7 @@
             /* Enhance clarity for scaled images */
             image-rendering: -webkit-optimize-contrast;
             image-rendering: auto;
-            transform: translateZ(0);
+            /* transform: translateZ(0); REMOVED to allow high-res re-rasterization */
             /* Force GPU rendering for sharper edges */
             transition: 0.3s;
         }
@@ -333,7 +333,7 @@
             transition: transform 0.1s ease-out;
             transform-origin: center center;
             cursor: grab;
-            will-change: transform;
+            /* will-change: transform; REMOVED to allow high-res re-rasterization */
             user-select: none;
         }
 
@@ -367,6 +367,25 @@
                 max-width: 85vw;
                 max-height: 40vh;
             }
+        }
+
+        /* --- Vertical Stack Mode --- */
+        .vertical-mode .img-slide {
+            align-items: center;
+        }
+
+        .vertical-mode .zoom-wrapper {
+            flex-direction: column;
+            justify-content: center;
+            height: 100%;
+            width: 100%;
+        }
+
+        .vertical-mode .img-slide img {
+            max-width: 90vw;
+            max-height: 48vh;
+            margin: 0.5vh 0;
+            object-fit: contain;
         }
 
         .back-book {
@@ -697,7 +716,7 @@
         }
 
         .item-design:hover {
-            background: url('kai.webp') center/cover no-repeat;
+            background: url('designmenu.jpg') center/cover no-repeat;
         }
 
         .grad-item h4 {
@@ -1244,6 +1263,7 @@
             <div class="project-content">
                 <span>2O22 PROJECT 06</span>
                 <h3>Kaiyuan Temple model Making</h3>
+
             </div>
         </div>
 
@@ -1467,7 +1487,7 @@
                 const counts = {
                     'book': 24,
                     'model': 21,
-                    'design': 10,
+                    'design': 2,
                     'proposal': 68
                 };
 
@@ -1479,8 +1499,12 @@
                         openGalleryViewer(folderName, counts[category]);
                     } else {
                         const isMob = window.innerWidth <= 768;
-                        const mode = (category === 'proposal' && !isMob) ? 'spread' : 'single';
-                        openBook(folderName, counts[category], 'webp', mode);
+                        let mode = 'single';
+                        if (category === 'proposal' && !isMob) mode = 'spread';
+                        if (category === 'design') mode = 'vertical';
+
+                        const ext = category === 'design' ? 'jpg' : 'webp';
+                        openBook(folderName, counts[category], ext, mode);
                         // Show Back Button explicitly for Grad projects
                     }
                     document.querySelector('.back-book').style.display = 'block';
@@ -1497,6 +1521,7 @@
 
                 if (mode === 'spread') {
                     viewer.classList.add('spread-mode');
+                    viewer.classList.remove('vertical-mode');
 
                     // 1. Load cover page immediately
                     const coverSlide = document.createElement('div');
@@ -1528,8 +1553,24 @@
                     if (count > initialTotal) {
                         setTimeout(() => loadSpreads(initialTotal + 1, count), 150);
                     }
+                } else if (mode === 'vertical') {
+                    viewer.classList.remove('spread-mode');
+                    viewer.classList.add('vertical-mode');
+
+                    const slide = document.createElement('div');
+                    slide.className = 'img-slide';
+                    const wrapper = document.createElement('div');
+                    wrapper.className = 'zoom-wrapper';
+
+                    for (let i = 1; i <= count; i++) {
+                        wrapper.appendChild(createImgElement(folder, i, ext));
+                    }
+                    slide.appendChild(wrapper);
+                    viewer.appendChild(slide);
+
                 } else {
                     viewer.classList.remove('spread-mode');
+                    viewer.classList.remove('vertical-mode');
 
                     const loadSingle = (start, end) => {
                         for (let i = start; i <= end; i++) {
@@ -1551,7 +1592,7 @@
                     }
                 }
 
-                initZoomLogic(); // Enable zoom for both modes
+                initZoomLogic(); // Enable zoom for all modes
                 const overlay = document.getElementById('book-overlay');
                 overlay.style.display = 'block';
                 setTimeout(() => overlay.classList.add('active'), 10);
@@ -2107,6 +2148,7 @@
             function initZoomLogic() {
                 const viewer = document.getElementById('image-viewer');
 
+                // Wheel Zoom (Desktop)
                 viewer.onwheel = (e) => {
                     const slide = getActiveSlide();
                     if (!slide) return;
@@ -2120,7 +2162,7 @@
                     const factor = delta > 0 ? 1.1 : 0.9;
 
                     state.scale *= factor;
-                    state.scale = Math.min(Math.max(1, state.scale), 4);
+                    state.scale = Math.min(Math.max(1, state.scale), 12);
 
                     if (state.scale === 1) {
                         state.x = 0;
@@ -2131,43 +2173,164 @@
                     applyTransform(wrapper, state);
                 };
 
-                // Pan Logic
+                // Mouse Pan & Click-to-Zoom logic
                 let isDragging = false;
+                let hasMoved = false; // Distinguish click vs drag
                 let startX, startY;
 
                 viewer.onmousedown = (e) => {
+                    // Prevent default to avoid selection issues
+                    // But don't stop propagation immediately if we want clicks to pass? 
+                    // Actually, we handle click manually.
+
                     const slide = getActiveSlide();
                     const wrapper = slide?.querySelector('.zoom-wrapper');
                     if (!wrapper) return;
 
-                    let state = zoomStates.get(wrapper);
-                    if (!state || state.scale <= 1) return;
+                    let state = zoomStates.get(wrapper) || { scale: 1, x: 0, y: 0 };
 
-                    isDragging = true;
-                    wrapper.classList.add('dragging');
-                    startX = e.clientX - state.x;
-                    startY = e.clientY - state.y;
+                    // Allow dragging only if zoomed in
+                    if (state.scale > 1) {
+                        isDragging = true;
+                        hasMoved = false;
+                        wrapper.classList.add('dragging');
+                        startX = e.clientX - state.x;
+                        startY = e.clientY - state.y;
+                        e.preventDefault(); // Prevent text selection
+                    }
                 };
 
-                window.onmousemove = (e) => {
+                window.addEventListener('mousemove', (e) => {
                     if (!isDragging) return;
+
                     const slide = getActiveSlide();
                     const wrapper = slide?.querySelector('.zoom-wrapper');
                     if (!wrapper) return;
 
                     let state = zoomStates.get(wrapper);
+
+                    // Check movement threshold
+                    if (!hasMoved) {
+                        if (Math.abs(e.clientX - startX - state.x) > 3 || Math.abs(e.clientY - startY - state.y) > 3) {
+                            hasMoved = true;
+                        }
+                    }
+
                     state.x = e.clientX - startX;
                     state.y = e.clientY - startY;
+                    applyTransform(wrapper, state);
+                });
 
+                window.addEventListener('mouseup', (e) => {
+                    if (isDragging) {
+                        isDragging = false;
+                        const wrappers = document.querySelectorAll('.zoom-wrapper');
+                        wrappers.forEach(w => w.classList.remove('dragging'));
+                        // Delay clearing hasMoved slightly to let click event check it?
+                        // Actually, we can check hasMoved right here or in click handler if we attach one to viewer.
+                        setTimeout(() => hasMoved = false, 50);
+                    }
+                });
+
+                // Click to Toggle Zoom (1x <-> 2.5x)
+                viewer.onclick = (e) => {
+                    if (hasMoved) return; // Verify it wasn't a drag operation
+                    // Check if clicked on an image
+                    if (!e.target.closest('img')) return;
+
+                    const slide = getActiveSlide();
+                    const wrapper = slide?.querySelector('.zoom-wrapper');
+                    if (!wrapper) return;
+
+                    let state = zoomStates.get(wrapper) || { scale: 1, x: 0, y: 0 };
+
+                    // Simple toggle: If zoomed out, zoom in to 2.5x. If zoomed in, reset.
+                    if (state.scale > 1.1) {
+                        state.scale = 1;
+                        state.x = 0;
+                        state.y = 0;
+                    } else {
+                        state.scale = 4;
+                    }
+
+                    zoomStates.set(wrapper, state);
                     applyTransform(wrapper, state);
                 };
 
-                window.onmouseup = () => {
-                    if (!isDragging) return;
-                    isDragging = false;
-                    const wrappers = document.querySelectorAll('.zoom-wrapper');
-                    wrappers.forEach(w => w.classList.remove('dragging'));
-                };
+                // --- Touch Logic (Pinch & Pan) ---
+                let lastTouchX = 0, lastTouchY = 0;
+                let touchPinchStart = { dist: 0, scale: 1 };
+                let isTouchDragging = false;
+
+                viewer.addEventListener('touchstart', (e) => {
+                    const slide = getActiveSlide();
+                    const wrapper = slide?.querySelector('.zoom-wrapper');
+                    if (!wrapper) return;
+
+                    let state = zoomStates.get(wrapper) || { scale: 1, x: 0, y: 0 };
+
+                    if (e.touches.length === 1) {
+                        // Pan Start
+                        if (state.scale > 1) {
+                            isTouchDragging = true;
+                            lastTouchX = e.touches[0].clientX;
+                            lastTouchY = e.touches[0].clientY;
+                        }
+                    } else if (e.touches.length === 2) {
+                        // Pinch Start
+                        isTouchDragging = false;
+                        const dist = Math.hypot(
+                            e.touches[0].clientX - e.touches[1].clientX,
+                            e.touches[0].clientY - e.touches[1].clientY
+                        );
+                        touchPinchStart = { dist: dist, scale: state.scale };
+                        e.preventDefault();
+                    }
+                }, { passive: false });
+
+                viewer.addEventListener('touchmove', (e) => {
+                    const slide = getActiveSlide();
+                    const wrapper = slide?.querySelector('.zoom-wrapper');
+                    if (!wrapper) return;
+                    let state = zoomStates.get(wrapper) || { scale: 1, x: 0, y: 0 };
+
+                    if (e.touches.length === 1 && isTouchDragging) {
+                        // Pan
+                        e.preventDefault();
+                        const dx = e.touches[0].clientX - lastTouchX;
+                        const dy = e.touches[0].clientY - lastTouchY;
+                        state.x += dx;
+                        state.y += dy;
+                        lastTouchX = e.touches[0].clientX;
+                        lastTouchY = e.touches[0].clientY;
+                        applyTransform(wrapper, state);
+                    } else if (e.touches.length === 2) {
+                        // Pinch
+                        e.preventDefault();
+                        const dist = Math.hypot(
+                            e.touches[0].clientX - e.touches[1].clientX,
+                            e.touches[0].clientY - e.touches[1].clientY
+                        );
+                        const scaleFactor = dist / touchPinchStart.dist;
+                        state.scale = Math.min(Math.max(1, touchPinchStart.scale * scaleFactor), 12);
+
+                        if (state.scale === 1) {
+                            state.x = 0; state.y = 0;
+                        }
+
+                        zoomStates.set(wrapper, state);
+                        applyTransform(wrapper, state);
+                    }
+                }, { passive: false });
+
+                viewer.addEventListener('touchend', (e) => {
+                    if (e.touches.length < 2) {
+                        // Pinch end
+                    }
+                    if (e.touches.length === 0) {
+                        isTouchDragging = false;
+                    }
+                });
             }
 
             function getActiveSlide() {
@@ -2304,17 +2467,21 @@
                 });
 
                 // --- PRELOAD GRADUATION IMAGES (Graduation Design) ---
-                // Manually add all known images from the 4 sub-folders to ensuring seamless navigation
+                // CRITICAL: Only preload the first few images to keep initial load fast (Tier 1)
                 const gradFolders = [
-                    { folder: 'grad_design', count: 10 },
-                    { folder: 'grad_model', count: 21 },
-                    { folder: 'grad_proposal', count: 68 },
-                    { folder: 'grad_book', count: 24 }
+                    { folder: 'grad_design', count: 2, ext: 'jpg' },
+                    { folder: 'grad_model', count: 21, ext: 'webp' },
+                    { folder: 'grad_proposal', count: 68, ext: 'webp' },
+                    { folder: 'grad_book', count: 24, ext: 'webp' }
                 ];
 
                 gradFolders.forEach(info => {
-                    for (let i = 1; i <= info.count; i++) {
-                        urls.add(new URL(`${info.folder}/${i}.webp`, location.href).href);
+                    // Preload ALL for design (only 2), but only first 5 for others
+                    const limit = (info.folder === 'grad_design') ? info.count : 5;
+                    const loopCount = Math.min(info.count, limit);
+
+                    for (let i = 1; i <= loopCount; i++) {
+                        urls.add(new URL(`${info.folder}/${i}.${info.ext}`, location.href).href);
                     }
                 });
 
@@ -2472,12 +2639,56 @@
                 }
             });
 
+            // --- NEW: Background Preloader (Tier 2) ---
+            function preloadBackgroundImages() {
+                console.log("Starting background preload...");
+                const gradFolders = [
+                    // Design already fully loaded (count=2)
+                    { folder: 'grad_model', count: 21, ext: 'webp' },
+                    { folder: 'grad_proposal', count: 68, ext: 'webp' },
+                    { folder: 'grad_book', count: 24, ext: 'webp' }
+                ];
+
+                const urls = [];
+                gradFolders.forEach(info => {
+                    // Start from 6, since 1-5 are already loaded
+                    for (let i = 6; i <= info.count; i++) {
+                        urls.push(`${info.folder}/${i}.${info.ext}`);
+                    }
+                });
+
+                // Load sequentially or in small batches to avoid network congestion
+                let loaded = 0;
+                const total = urls.length;
+
+                // Simple sequential loader
+                const loadNext = () => {
+                    if (loaded >= total) {
+                        console.log("Background preload complete.");
+                        return;
+                    }
+                    const img = new Image();
+                    img.src = urls[loaded];
+                    img.onload = img.onerror = () => {
+                        loaded++;
+                        // Small delay to yield to main thread
+                        setTimeout(loadNext, 20);
+                    };
+                };
+
+                if (urls.length > 0) loadNext();
+            }
+
             // Ensure body overflow is hidden during load
             document.body.style.overflow = 'hidden';
             window.addEventListener('load', () => {
                 initLoader();
                 // Delay preloading slightly after initial load to prioritize main assets
                 setTimeout(preloadMenuImages, 2000);
+
+                // Start background preload after 4 seconds (let initial animation finish)
+                setTimeout(preloadBackgroundImages, 4000);
+
                 initLightboxZoom(); // Initialize light box zoom/pan logic
             });
         </script>
