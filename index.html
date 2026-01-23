@@ -2163,58 +2163,80 @@
 
                     let state = zoomStates.get(wrapper) || { scale: 1, x: 0, y: 0 };
 
+                    const rect = wrapper.getBoundingClientRect();
+                    const centerX = rect.left + rect.width / 2;
+                    const centerY = rect.top + rect.height / 2;
+
+                    // Mouse relative to center (for stable zoom)
+                    const mouseX = e.clientX - centerX;
+                    const mouseY = e.clientY - centerY;
+
                     const delta = -e.deltaY;
                     const factor = delta > 0 ? 1.1 : 0.9;
 
-                    let newScale = state.scale * factor;
+                    const oldScale = state.scale;
+                    let newScale = oldScale * factor;
                     newScale = Math.min(Math.max(1, newScale), 12);
+
+                    const ratio = newScale / oldScale;
+
+                    // Adjust position to keep mouse stationary
+                    state.x += mouseX * (1 - ratio);
+                    state.y += mouseY * (1 - ratio);
                     state.scale = newScale;
 
-                    if (state.scale === 1) {
-                        state.x = 0; state.y = 0;
-                    } else {
-                        updatePanFromMouse(e.clientX, e.clientY, wrapper, state);
+                    if (state.scale <= 1.01) {
+                        state.scale = 1;
+                        state.x = 0;
+                        state.y = 0;
                     }
 
                     zoomStates.set(wrapper, state);
                     applyTransform(wrapper, state);
                 };
 
-                function updatePanFromMouse(mx, my, wrapper, state) {
-                    if (state.scale <= 1) {
-                        state.x = 0; state.y = 0;
-                        return;
-                    }
-
-                    const winW = window.innerWidth;
-                    const winH = window.innerHeight;
-
-                    // Aggressive Panning:
-                    const xFactor = (0.5 - (mx / winW));
-                    const yFactor = (0.5 - (my / winH));
-
-                    // Range increases with scale
-                    state.x = xFactor * winW * (state.scale - 1) * 1.1;
-                    state.y = yFactor * winH * (state.scale - 1) * 1.1;
-                }
-
-                // Mouse Pan & Click-to-Zoom logic
+                // Mouse Drag & Click-to-Zoom logic
                 let isDragging = false;
                 let hasMoved = false; // Distinguish click vs drag
                 let startX, startY;
 
-                // Disable Drag logic for Desktop
-                viewer.onmousedown = null;
-
-                window.addEventListener('mousemove', (e) => {
+                viewer.onmousedown = (e) => {
+                    e.preventDefault();
                     const slide = getActiveSlide();
                     const wrapper = slide?.querySelector('.zoom-wrapper');
                     if (!wrapper) return;
-                    let state = zoomStates.get(wrapper);
-                    if (!state || state.scale <= 1) return;
 
-                    // Continuous Pan (Lens Effect)
-                    updatePanFromMouse(e.clientX, e.clientY, wrapper, state);
+                    let state = zoomStates.get(wrapper) || { scale: 1, x: 0, y: 0 };
+
+                    // Allow dragging only if zoomed in
+                    if (state.scale > 1) {
+                        isDragging = true;
+                        hasMoved = false;
+                        wrapper.classList.add('dragging');
+                        startX = e.clientX - state.x;
+                        startY = e.clientY - state.y;
+                    }
+                };
+
+                window.addEventListener('mousemove', (e) => {
+                    if (!isDragging) return;
+
+                    const slide = getActiveSlide();
+                    const wrapper = slide?.querySelector('.zoom-wrapper');
+                    if (!wrapper) return;
+
+                    let state = zoomStates.get(wrapper);
+                    if (!state) return;
+
+                    // Check movement threshold
+                    if (!hasMoved) {
+                        if (Math.abs(e.clientX - startX - state.x) > 3 || Math.abs(e.clientY - startY - state.y) > 3) {
+                            hasMoved = true;
+                        }
+                    }
+
+                    state.x = e.clientX - startX;
+                    state.y = e.clientY - startY;
                     applyTransform(wrapper, state);
                 });
 
@@ -2223,8 +2245,6 @@
                         isDragging = false;
                         const wrappers = document.querySelectorAll('.zoom-wrapper');
                         wrappers.forEach(w => w.classList.remove('dragging'));
-                        // Delay clearing hasMoved slightly to let click event check it?
-                        // Actually, we can check hasMoved right here or in click handler if we attach one to viewer.
                         setTimeout(() => hasMoved = false, 50);
                     }
                 });
