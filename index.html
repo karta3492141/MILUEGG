@@ -335,12 +335,6 @@
             transition: transform 0.1s ease-out;
             transform-origin: center center;
             cursor: grab;
-            will-change: transform;
-            /* Restore for mobile stability */
-            backface-visibility: hidden;
-            /* Prevent flicker */
-            transform: translateZ(0);
-            /* Force GPU */
             user-select: none;
         }
 
