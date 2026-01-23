@@ -1286,7 +1286,7 @@
                                 <li>李浚營建築師事務所 實習 | Internship</li>
                                 <li>大藏聯合建築師事務所 實習 | Internship</li>
                                 <li>DVCH DEVILLARCHACON 海外深度實習 | Overseas Internship</li>
-                                <li>台灣普悠瑪部落傳統竹構造課程助理 | Teaching Assistant</li>
+                                <li>台灣普悠瑪部落傳統竹構造課程助理 | Assistant</li>
                             </ul>
                         </div>
                         <div class="info-item">
@@ -2152,7 +2152,7 @@
             function initZoomLogic() {
                 const viewer = document.getElementById('image-viewer');
 
-                // Wheel Zoom (Desktop)
+                // Wheel Zoom (Desktop) with Mouse-Following Pan Calculation
                 viewer.onwheel = (e) => {
                     const slide = getActiveSlide();
                     if (!slide) return;
@@ -2162,66 +2162,59 @@
                     e.preventDefault();
 
                     let state = zoomStates.get(wrapper) || { scale: 1, x: 0, y: 0 };
+
                     const delta = -e.deltaY;
                     const factor = delta > 0 ? 1.1 : 0.9;
 
-                    state.scale *= factor;
-                    state.scale = Math.min(Math.max(1, state.scale), 12);
+                    let newScale = state.scale * factor;
+                    newScale = Math.min(Math.max(1, newScale), 12);
+                    state.scale = newScale;
 
                     if (state.scale === 1) {
-                        state.x = 0;
-                        state.y = 0;
+                        state.x = 0; state.y = 0;
+                    } else {
+                        updatePanFromMouse(e.clientX, e.clientY, wrapper, state);
                     }
 
                     zoomStates.set(wrapper, state);
                     applyTransform(wrapper, state);
                 };
 
+                function updatePanFromMouse(mx, my, wrapper, state) {
+                    if (state.scale <= 1) {
+                        state.x = 0; state.y = 0;
+                        return;
+                    }
+
+                    const winW = window.innerWidth;
+                    const winH = window.innerHeight;
+
+                    // Aggressive Panning:
+                    const xFactor = (0.5 - (mx / winW));
+                    const yFactor = (0.5 - (my / winH));
+
+                    // Range increases with scale
+                    state.x = xFactor * winW * (state.scale - 1) * 1.5;
+                    state.y = yFactor * winH * (state.scale - 1) * 1.5;
+                }
+
                 // Mouse Pan & Click-to-Zoom logic
                 let isDragging = false;
                 let hasMoved = false; // Distinguish click vs drag
                 let startX, startY;
 
-                viewer.onmousedown = (e) => {
-                    // Prevent default to avoid selection issues
-                    // But don't stop propagation immediately if we want clicks to pass? 
-                    // Actually, we handle click manually.
-
-                    const slide = getActiveSlide();
-                    const wrapper = slide?.querySelector('.zoom-wrapper');
-                    if (!wrapper) return;
-
-                    let state = zoomStates.get(wrapper) || { scale: 1, x: 0, y: 0 };
-
-                    // Allow dragging only if zoomed in
-                    if (state.scale > 1) {
-                        isDragging = true;
-                        hasMoved = false;
-                        wrapper.classList.add('dragging');
-                        startX = e.clientX - state.x;
-                        startY = e.clientY - state.y;
-                        e.preventDefault(); // Prevent text selection
-                    }
-                };
+                // Disable Drag logic for Desktop
+                viewer.onmousedown = null;
 
                 window.addEventListener('mousemove', (e) => {
-                    if (!isDragging) return;
-
                     const slide = getActiveSlide();
                     const wrapper = slide?.querySelector('.zoom-wrapper');
                     if (!wrapper) return;
-
                     let state = zoomStates.get(wrapper);
+                    if (!state || state.scale <= 1) return;
 
-                    // Check movement threshold
-                    if (!hasMoved) {
-                        if (Math.abs(e.clientX - startX - state.x) > 3 || Math.abs(e.clientY - startY - state.y) > 3) {
-                            hasMoved = true;
-                        }
-                    }
-
-                    state.x = e.clientX - startX;
-                    state.y = e.clientY - startY;
+                    // Continuous Pan (Lens Effect)
+                    updatePanFromMouse(e.clientX, e.clientY, wrapper, state);
                     applyTransform(wrapper, state);
                 });
 
@@ -2236,7 +2229,7 @@
                     }
                 });
 
-                // Click to Toggle Zoom (1x <-> 2.5x)
+                // Click to Toggle Zoom (1x <-> 4x)
                 viewer.onclick = (e) => {
                     if (hasMoved) return; // Verify it wasn't a drag operation
                     // Check if clicked on an image
@@ -2248,13 +2241,30 @@
 
                     let state = zoomStates.get(wrapper) || { scale: 1, x: 0, y: 0 };
 
-                    // Simple toggle: If zoomed out, zoom in to 2.5x. If zoomed in, reset.
+                    // Simple toggle: If zoomed out, zoom in to 4x. If zoomed in, reset.
                     if (state.scale > 1.1) {
                         state.scale = 1;
                         state.x = 0;
                         state.y = 0;
                     } else {
-                        state.scale = 4;
+                        // Zoom in to 4x centered on click
+                        const rect = wrapper.getBoundingClientRect();
+                        const centerX = rect.left + rect.width / 2;
+                        const centerY = rect.top + rect.height / 2;
+
+                        // Vector from center to click
+                        const mouseX = e.clientX - centerX;
+                        const mouseY = e.clientY - centerY;
+
+                        const newScale = 4;
+                        const oldScale = 1; // Assuming we start from 1
+                        const ratio = newScale / oldScale;
+
+                        // T_new = V - (V - T_old) * ratio => V - V * ratio (since T_old is 0)
+                        // T_new = V * (1 - ratio) = V * (1 - 4) = -3 * V
+                        state.x = mouseX * (1 - ratio);
+                        state.y = mouseY * (1 - ratio);
+                        state.scale = newScale;
                     }
 
                     zoomStates.set(wrapper, state);
