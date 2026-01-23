@@ -1224,7 +1224,8 @@
             <div class="project-content">
                 <span>2O23 PROJECT O4</span>
                 <h3>Building a Tiny Box</h3>
-                <p>第五屆全國青年景觀競賽作品。將永續系統與社區動線融合，創造兼具生態價值與公共性的城市綠廊。</p>
+                <p>這個建築設計是一個24小時營業的複合式建築，擁有一個下沉式廣場，通過室內外空間的層次變化，提升了視覺享受。下沉式設計不僅改善了地下空間的採光、通風和隔音效果，還有效解決了基地周圍的噪音問題。動線組織巧妙地連接了步道、天橋和屋頂空間，讓不同功能區域相互交織，鼓勵使用者在其中穿梭，達到運動和休憩的目的。
+                </p>
             </div>
         </div>
 
@@ -1233,7 +1234,8 @@
             <div class="project-content">
                 <span>2O22 PROJECT O5</span>
                 <h3>Intergenerational Co-living</h3>
-                <p>第五屆全國青年景觀競賽作品。將永續系統與社區動線融合，創造兼具生態價值與公共性的城市綠廊。</p>
+                <p>這個建築項目是一個面向高齡社會需求的兩家人住宅，注重健康與永續發展。透過共享住宅的設計，這座住宅將傳統家庭空間與現代共居理念相結合，提供兩家人各自擁有私人空間的同時，也鼓勵共同生活與互動建築形式和構造系統的設計注重環境永續，採用了自然通風、綠化屋頂、雨水回收等環保措施。
+                </p>
             </div>
         </div>
 
@@ -1242,7 +1244,6 @@
             <div class="project-content">
                 <span>2O22 PROJECT 06</span>
                 <h3>Kaiyuan Temple model Making</h3>
-                <p>第五屆全國青年景觀競賽作品。將永續系統與社區動線融合，創造兼具生態價值與公共性的城市綠廊。</p>
             </div>
         </div>
 
@@ -2300,6 +2301,21 @@
                 document.querySelectorAll('[data-src]').forEach(el => {
                     const v = el.getAttribute('data-src');
                     if (v) urls.add(new URL(v, location.href).href);
+                });
+
+                // --- PRELOAD GRADUATION IMAGES (Graduation Design) ---
+                // Manually add all known images from the 4 sub-folders to ensuring seamless navigation
+                const gradFolders = [
+                    { folder: 'grad_design', count: 10 },
+                    { folder: 'grad_model', count: 21 },
+                    { folder: 'grad_proposal', count: 68 },
+                    { folder: 'grad_book', count: 24 }
+                ];
+
+                gradFolders.forEach(info => {
+                    for (let i = 1; i <= info.count; i++) {
+                        urls.add(new URL(`${info.folder}/${i}.webp`, location.href).href);
+                    }
                 });
 
                 // Collect background-image from computed styles
