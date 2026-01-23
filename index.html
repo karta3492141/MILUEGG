@@ -142,6 +142,7 @@
             object-fit: cover;
             opacity: 0;
             transition: 1.5s;
+            image-orientation: from-image;
         }
 
         .hero-bg-slide.active {
@@ -626,6 +627,7 @@
             object-fit: cover;
             opacity: 0;
             transition: opacity 1.5s ease-in-out;
+            image-orientation: from-image;
         }
 
         .grad-bg-slide.active {
@@ -683,19 +685,19 @@
         }
 
         .item-book:hover {
-            background: url('midle.png') center/cover no-repeat;
+            background: url('midle.webp') center/cover no-repeat;
         }
 
         .item-model:hover {
-            background: url('modelmenu.JPG') center/cover no-repeat;
+            background: url('modelmenu.webp') center/cover no-repeat;
         }
 
         .item-proposal:hover {
-            background: url('proposal.jpg') center/cover no-repeat;
+            background: url('proposal.webp') center/cover no-repeat;
         }
 
         .item-design:hover {
-            background: url('kai.png') center/cover no-repeat;
+            background: url('kai.webp') center/cover no-repeat;
         }
 
         .grad-item h4 {
@@ -730,69 +732,97 @@
             color: #fff;
         }
 
-        /* --- 照片牆模式 (Collage Mode) --- */
-        #collage-overlay {
+        /* --- 3D 旋轉畫廊 (3D Rotating Gallery) --- */
+        #gallery-overlay {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: #050505;
+            background: #000;
             display: none;
             z-index: 4000;
-            overflow: hidden;
             opacity: 0;
-            transition: opacity 0.5s ease;
+            transition: opacity 0.8s ease;
+            perspective: 1000px;
+            /* Enable 3D Space */
+            overflow: hidden;
+            pointer-events: auto;
+            /* Catch drags */
         }
 
-        #collage-overlay.active {
+        /* ... skipped ... */
+
+        .gallery-item {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            -webkit-box-reflect: below 10px linear-gradient(transparent 60%, rgba(0, 0, 0, 0.4));
+            cursor: pointer;
+            transition: 0.3s;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            background: #000;
+            pointer-events: auto;
+            will-change: transform;
+        }
+
+        @media (max-width: 768px) {
+            .gallery-item {
+                -webkit-box-reflect: none;
+                /* Disable expensive reflection on mobile */
+            }
+        }
+
+        #gallery-overlay.active {
             opacity: 1;
         }
 
-        #collage-container {
+        #gallery-stage {
             width: 100%;
             height: 100%;
-            position: relative;
-        }
-
-        .collage-item {
-            position: absolute;
-            /* Width set dynamically via JS */
-            background: #fff;
-            padding: 5px 5px 20px 5px;
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4);
-            cursor: grab;
-            transition: transform 0.3s cubic-bezier(0.2, 0, 0.2, 1);
-            user-select: none;
-            will-change: transform, top, left;
-        }
-
-        .collage-item:hover {
-            transform: scale(1.05) !important;
-            z-index: 1000 !important;
-            box-shadow: 0 20px 45px rgba(0, 0, 0, 0.6);
-        }
-
-        .collage-item:active {
-            cursor: grabbing;
-            transition: scale 0.2s ease;
-        }
-
-        .collage-item img {
-            width: 100%;
-            height: auto;
-            display: block;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transform-style: preserve-3d;
+            touch-action: none;
+            /* Critical for mobile drag */
             pointer-events: none;
-            /* Prevent image dragging interference */
-            filter: grayscale(20%);
-            transition: 0.3s;
+            /* Let clicks pass through to items behind Z=0 */
         }
 
-        .collage-item:hover img {
-            filter: grayscale(0%);
+        #gallery-spinner {
+            position: relative;
+            width: 250px;
+            height: 350px;
+            transform-style: preserve-3d;
+            transition: transform 0.1s ease-out;
+            pointer-events: none;
+            will-change: transform;
         }
 
-        /* --- 照片牆燈箱 (Collage Lightbox) --- */
+        /* 為了讓旋轉更順滑, 滑動結束後加慣性動畫 */
+        #gallery-spinner.inertia {
+            transition: transform 1s cubic-bezier(0.2, 0, 0.2, 1);
+        }
+
+
+
+        .gallery-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        .gallery-item:hover {
+            border-color: #fff;
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
+        }
+
+        /* --- Lightbox Styles (Restored & Enhanced) --- */
         #collage-lightbox {
             position: fixed;
             top: 0;
@@ -806,7 +836,8 @@
             align-items: center;
             opacity: 0;
             transition: opacity 0.4s ease;
-            cursor: zoom-out;
+            /* Allow click-through to close on background */
+            cursor: pointer;
         }
 
         #collage-lightbox.active {
@@ -820,70 +851,33 @@
             box-shadow: 0 0 50px rgba(0, 0, 0, 0.8);
             transform: scale(0.9);
             transition: transform 0.4s cubic-bezier(0.2, 0, 0.2, 1);
+            cursor: zoom-in;
+            /* Indicate zoomable */
         }
 
         #collage-lightbox.active img {
             transform: scale(1);
         }
 
-        /* --- 照片掛繩效果 (Collage Rope) --- */
-        #collage-rope {
-            position: absolute;
-            top: 100px;
-            left: 0;
-            width: 100%;
-            height: 1px;
-            background: rgba(255, 255, 255, 0.4);
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
-            z-index: 5;
-            pointer-events: none;
-            display: block;
+        /* Zoomed State */
+        #collage-lightbox img.zoomed {
+            transform: scale(1.8) !important;
+            max-width: none !important;
+            max-height: none !important;
+            cursor: zoom-out !important;
+            /* Ensure it covers screen if needed */
+            min-width: 50vw;
         }
 
-        .collage-item.hanging {
-            padding: 4px 4px 15px 4px !important;
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3) !important;
-            transition: all 0.8s cubic-bezier(0.2, 0, 0.2, 1) !important;
-        }
-
-        /* 夾子效果 (Clothespin) */
-        .collage-item.hanging::before {
-            content: '';
-            position: absolute;
-            top: -12px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 8px;
-            height: 20px;
-            background: #d4b491;
-            border-radius: 2px;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.4);
-            z-index: 10;
-        }
-
+        /* Mobile Adjustments for Gallery */
         @media (max-width: 768px) {
-            #collage-rope {
-                top: 100px;
-            }
-
-            .collage-item.hanging {
-                padding: 3px 3px 10px 3px !important;
-            }
-
-            .collage-item.hanging::before {
-                width: 6px;
-                height: 15px;
-                top: -10px;
+            #gallery-spinner {
+                width: 160px;
+                height: 220px;
             }
         }
 
-        @media (max-width: 768px) {
-            .collage-item {
-                /* Width set dynamically via JS */
-                padding: 4px 4px 15px 4px;
-            }
-        }
-
+        /* Correctly re-wrap all these mobile overrides */
         @media (max-width: 768px) {
             body {
                 font-size: 3vw;
@@ -898,7 +892,6 @@
                 letter-spacing: 2px;
             }
 
-            /* Restore About Me Close Button to normal */
             /* Restore About Me Close Button to normal */
             .close-btn {
                 font-size: 12px !important;
@@ -1151,13 +1144,13 @@
 
     <section class="hero">
         <div class="hero-bg-slider">
-            <img src="tree1.jpg" class="hero-bg-slide" alt="Hero BG" fetchpriority="high">
-            <img data-src="tree2.jpg" class="hero-bg-slide" alt="Hero BG">
-            <img data-src="cry1.png" class="hero-bg-slide" alt="Hero BG">
-            <img data-src="tree4.jpg" class="hero-bg-slide" alt="Hero BG">
-            <img data-src="tree5.jpg" class="hero-bg-slide" alt="Hero BG">
-            <img data-src="map1.jpg" class="hero-bg-slide" alt="Hero BG">
-            <img data-src="carton.png" class="hero-bg-slide" alt="Hero BG">
+            <img src="tree1.webp" class="hero-bg-slide" alt="tree1" fetchpriority="high">
+            <img data-src="tree2.webp" class="hero-bg-slide" alt="tree2">
+            <img data-src="cry1.webp" class="hero-bg-slide" alt="cry1">
+            <img data-src="tree4.jpg" class="hero-bg-slide" alt="tree4">
+            <img data-src="tree5.webp" class="hero-bg-slide" alt="tree5">
+            <img data-src="map1.webp" class="hero-bg-slide" alt="map1">
+            <img data-src="carton.webp" class="hero-bg-slide" alt="carton">
         </div>
         <div class="hero-overlay"></div>
         <h1>PORTFOLIO</h1>
@@ -1167,7 +1160,7 @@
     <div class="project-section">
         <!-- Graduation Design Special Item -->
         <div class="project-item" onclick="toggleGradMenu(true)">
-            <div class="project-image-box"><img src="firstphoto.jpg" alt="Graduation Design"></div>
+            <div class="project-image-box"><img src="firstphoto.webp" alt="Graduation Design"></div>
             <!-- Using house.png as placeholder -->
             <div class="project-content">
                 <span>2O25 GRADUATION DESIGN</span>
@@ -1178,7 +1171,7 @@
         </div>
 
         <div class="project-item" onclick="openBook('p1', 8)">
-            <div class="project-image-box"><img src="Protfolio01.png" alt=""></div>
+            <div class="project-image-box"><img src="Protfolio01.webp" alt=""></div>
             <div class="project-content">
                 <span>2024 PROJECT O1</span>
                 <h3>Wildfire Prevention Skyscraper</h3>
@@ -1188,43 +1181,46 @@
         </div>
 
         <div class="project-item" onclick="openBook('p2', 6)">
-            <div class="project-image-box"><img src="house.png" alt=""></div>
+            <div class="project-image-box"><img src="house.webp" alt=""></div>
             <div class="project-content">
-                <span>2O23 INTERN</span>
+                <span>2O23 INTERNSHIP</span>
                 <h3>Bamboo construction ttakuban practical course</h3>
-                <p>第五屆全國青年景觀競賽作品。將永續系統與社區動線融合，創造兼具生態價值與公共性的城市綠廊。</p>
+                <p>實習期間參與台灣築構學苑普悠瑪竹構傳承實作課程，認識普悠瑪部落特有TTAKUBAN（少年會所）的竹構建築與工法，見證傳統材料的可行性與美學價值。</p>
             </div>
         </div>
 
         <div class="project-item" onclick="openBook('p3', 7)">
-            <div class="project-image-box"><img src="flower.png" alt=""></div>
+            <div class="project-image-box"><img src="flower.webp" alt=""></div>
             <div class="project-content">
                 <span>2O23 COMPETITION</span>
                 <h3>The 5th National Youth Landscape Competition</h3>
-                <p>關於都市空間與人類行為的深度研究。透過數據分析與設計原型，探討未來居住環境的可能性。</p>
+                <p>鳥巢是鳥兒歸巢休憩的場所，因此我們將人類比作為鳥，創造一個能讓人聚集並放鬆的空間，使人進入其中時，能夠感受到如同鳥兒回到巢中的溫暖與安穩。我們的設計意圖模擬鳥巢在樹枝間的自然形態，讓光線穿過樹葉間的縫隙，灑落進巢內，帶來光影的變化，讓人在其中徜徉，感受時光與空間的流動。
+                </p>
             </div>
         </div>
 
         <div class="project-item" onclick="openBook('p4', 9)">
-            <div class="project-image-box"><img src="unity.png" alt=""></div>
+            <div class="project-image-box"><img src="unity.webp" alt=""></div>
             <div class="project-content">
                 <span>2O23 PROJECT O2</span>
                 <h3>UNITY PLAZA</h3>
-                <p>第五屆全國青年景觀競賽作品。將永續系統與社區動線融合，創造兼具生態價值與公共性的城市綠廊。</p>
+                <p>一個將展覽、市集與公園融合的多功能空間。模糊藝術與日常生活界限的場所，讓每個人無論是藝術愛好者、創作者還是普通市民，都能在這裡找到屬於自己的一片天地。這個設計不僅僅是一個建築，它是社區生活的延伸，是藝術與人群間的對話平台，讓藝術無處不在，並且深深融入人們的日常
+                </p>
             </div>
         </div>
 
         <div class="project-item" onclick="openBook('p5', 4)">
-            <div class="project-image-box"><img src="garden.png" alt=""></div>
+            <div class="project-image-box"><img src="garden.webp" alt=""></div>
             <div class="project-content">
                 <span>2O23 PROJECT O3</span>
                 <h3>Modular Market Garden</h3>
-                <p>第五屆全國青年景觀競賽作品。將永續系統與社區動線融合，創造兼具生態價值與公共性的城市綠廊。</p>
+                <p>將市集攤位與公園空間巧妙結合，創造一個多功能的社區場所。模矩化的攤販設計，提升整體美觀與管理性，並為品牌展示提供理想平台。市集提供各式食物、藝術品和手工藝品，滿足市民多樣需求；而公園則提供綠意盎然的休憩空間，讓人們在此放鬆、社交、享受城市文化。設計中的遮陽板採用滑軌伸縮系統，根據天氣需求靈活調整，提供陰涼的同時也能縮回以節省空間，提升場地利用效率。
+                </p>
             </div>
         </div>
 
         <div class="project-item" onclick="openBook('p6', 6)">
-            <div class="project-image-box"><img src="tiny.png" alt=""></div>
+            <div class="project-image-box"><img src="tiny.webp" alt=""></div>
             <div class="project-content">
                 <span>2O23 PROJECT O4</span>
                 <h3>Building a Tiny Box</h3>
@@ -1233,7 +1229,7 @@
         </div>
 
         <div class="project-item" onclick="openBook('p7', 7)">
-            <div class="project-image-box"><img src="Intergenerational.png" alt=""></div>
+            <div class="project-image-box"><img src="Intergenerational.webp" alt=""></div>
             <div class="project-content">
                 <span>2O22 PROJECT O5</span>
                 <h3>Intergenerational Co-living</h3>
@@ -1242,7 +1238,7 @@
         </div>
 
         <div class="project-item" onclick="openBook('p8', 4)">
-            <div class="project-image-box"><img src="kai.png" alt=""></div>
+            <div class="project-image-box"><img src="kai.webp" alt=""></div>
             <div class="project-content">
                 <span>2O22 PROJECT 06</span>
                 <h3>Kaiyuan Temple model Making</h3>
@@ -1297,14 +1293,17 @@
             <div id="image-viewer"></div>
         </div>
 
-        <div id="collage-overlay">
+        <div id="gallery-overlay">
             <div class="back-book" onclick="backToGradMenu()">BACK</div>
             <div class="close-book" onclick="closeBook()">CLOSE ✕</div>
-            <div id="collage-rope"></div>
-            <div id="collage-container"></div>
+            <div id="gallery-stage">
+                <div id="gallery-spinner">
+                    <!-- Gallery Items will be injected here JS -->
+                </div>
+            </div>
         </div>
 
-        <div id="collage-lightbox" onclick="closeCollageLightbox()">
+        <div id="collage-lightbox" onclick="closeCollageLightbox()" style="touch-action: none;">
             <img src="" id="lightbox-img" alt="Enlarged Model Photo">
         </div>
 
@@ -1313,11 +1312,11 @@
         <!-- Graduation Selection Menu -->
         <div id="grad-menu">
             <div class="grad-bg-slider">
-                <img src="tree1.jpg" class="grad-bg-slide active" alt="bg" fetchpriority="high">
-                <img data-src="tree2.jpg" class="grad-bg-slide" alt="bg">
-                <img data-src="tree3.jpg" class="grad-bg-slide" alt="bg">
+                <img src="tree1.webp" class="grad-bg-slide active" alt="bg" fetchpriority="high">
+                <img data-src="tree2.webp" class="grad-bg-slide" alt="bg">
+                <img data-src="tree3.webp" class="grad-bg-slide" alt="bg">
                 <img data-src="tree4.jpg" class="grad-bg-slide" alt="bg">
-                <img data-src="tree5.jpg" class="grad-bg-slide" alt="bg">
+                <img data-src="tree5.webp" class="grad-bg-slide" alt="bg">
             </div>
             <div class="grad-overlay"></div>
 
@@ -1452,11 +1451,11 @@
                 const collageOverlay = document.getElementById('collage-overlay');
 
                 bookOverlay.classList.remove('active');
-                collageOverlay.classList.remove('active');
+                if (document.getElementById('gallery-overlay')) document.getElementById('gallery-overlay').classList.remove('active');
 
                 setTimeout(() => {
                     bookOverlay.style.display = 'none';
-                    collageOverlay.style.display = 'none';
+                    if (document.getElementById('gallery-overlay')) document.getElementById('gallery-overlay').style.display = 'none';
                 }, 300);
 
                 // Re-open Menu
@@ -1465,8 +1464,8 @@
 
             function openGradBook(category) {
                 const counts = {
-                    'book': 25,
-                    'model': 22,
+                    'book': 24,
+                    'model': 21,
                     'design': 10,
                     'proposal': 68
                 };
@@ -1476,11 +1475,11 @@
                 toggleGradMenu(false); // Close menu
                 setTimeout(() => {
                     if (category === 'model') {
-                        openCollageViewer(folderName, counts[category]);
+                        openGalleryViewer(folderName, counts[category]);
                     } else {
                         const isMob = window.innerWidth <= 768;
                         const mode = (category === 'proposal' && !isMob) ? 'spread' : 'single';
-                        openBook(folderName, counts[category], 'jpg', mode);
+                        openBook(folderName, counts[category], 'webp', mode);
                         // Show Back Button explicitly for Grad projects
                     }
                     document.querySelector('.back-book').style.display = 'block';
@@ -1488,7 +1487,7 @@
             }
 
             // 3. 左右翻頁圖片瀏覽器
-            function openBook(folder, count, ext = 'png', mode = 'single') {
+            function openBook(folder, count, ext = 'webp', mode = 'single') {
                 // Reset state: Hide back button by default
                 document.querySelector('.back-book').style.display = 'none';
 
@@ -1567,7 +1566,10 @@
             function openCollageViewer(folder, count) {
                 const overlay = document.getElementById('collage-overlay');
                 const container = document.getElementById('collage-container');
-                container.innerHTML = ''; // Clear old
+                const dotsContainer = document.getElementById('collage-dots');
+
+                container.innerHTML = ''; // Clear old items
+                dotsContainer.innerHTML = ''; // Clear old dots
                 hungCount = 0; // Reset hanging count
 
                 // Show overlay
@@ -1575,116 +1577,315 @@
                 setTimeout(() => overlay.classList.add('active'), 10);
                 document.body.style.overflow = 'hidden';
 
-                for (let i = 1; i <= count; i++) {
-                    const item = document.createElement('div');
-                    item.className = 'collage-item';
-                    item.style.opacity = '0'; // Hide initially for smooth fade-in
-                    item.style.transition = 'opacity 0.5s ease, transform 0.3s cubic-bezier(0.2, 0, 0.2, 1)';
+                const isMob = window.innerWidth < 768;
 
-                    const img = createImgElement(folder, i, 'jpg');
-                    item.appendChild(img);
-                    container.appendChild(item);
+                if (isMob) {
+                    // --- Mobile: Pagination Logic (Scattered 9 per page) ---
+                    dotsContainer.style.display = 'flex';
+                    const itemsPerPage = 9;
+                    const totalPages = Math.ceil(count / itemsPerPage);
 
-                    // Wait for image to load to detect proportions
-                    img.onload = () => {
-                        const isPortrait = img.naturalHeight > img.naturalWidth;
-                        const isMob = window.innerWidth < 768;
+                    // Create Pages
+                    for (let p = 0; p < totalPages; p++) {
+                        const page = document.createElement('div');
+                        page.className = 'collage-page';
+                        page.dataset.pageIndex = p;
 
-                        // Smart sizing based on orientation
-                        let minW, maxW;
-                        if (isPortrait) {
-                            minW = isMob ? 150 : 250;
-                            maxW = isMob ? 220 : 330;
-                        } else {
-                            minW = isMob ? 200 : 350;
-                            maxW = isMob ? 320 : 520;
+                        const startIdx = p * itemsPerPage + 1;
+                        const endIdx = Math.min(startIdx + itemsPerPage - 1, count);
+
+                        for (let i = startIdx; i <= endIdx; i++) {
+                            const item = document.createElement('div');
+                            item.className = 'collage-item';
+                            // Initial state
+                            item.style.opacity = '0';
+                            item.style.transition = 'opacity 0.5s ease, transform 0.3s cubic-bezier(0.2, 0, 0.2, 1)';
+
+                            const img = createImgElement(folder, i, 'webp');
+                            item.appendChild(img);
+                            page.appendChild(item);
+
+                            img.onload = () => {
+                                const isPortrait = img.naturalHeight > img.naturalWidth;
+
+                                // Mobile sizes
+                                let minW = 120, maxW = 180;
+                                if (isPortrait) {
+                                    minW = 100; maxW = 150;
+                                }
+
+                                const itemW = minW + Math.random() * (maxW - minW);
+                                item.style.width = `${itemW}px`;
+
+                                // Boundary within the page (100vw, 100vh)
+                                // Keep some padding away from edges
+                                const itemH = (img.naturalHeight / img.naturalWidth) * itemW;
+                                const maxX = window.innerWidth - itemW - 20;
+                                const maxY = window.innerHeight - itemH - 80; // Reserve bottom space for dots
+
+                                const randX = 10 + Math.random() * Math.max(0, maxX - 20); // Safe random
+                                const randY = 50 + Math.random() * Math.max(0, maxY - 60); // Safe random top offset
+
+                                const randRot = (Math.random() - 0.5) * 20;
+
+                                item.style.left = `${randX}px`;
+                                item.style.top = `${randY}px`;
+                                item.style.transform = `rotate(${randRot}deg)`;
+                                item.style.opacity = '1';
+
+                                item.onclick = () => openCollageLightbox(item);
+                            };
                         }
+                        container.appendChild(page);
 
-                        const itemW = minW + Math.random() * (maxW - minW);
-                        item.style.width = `${itemW}px`;
+                        // Create Dot
+                        const dot = document.createElement('div');
+                        dot.className = 'collage-dot';
+                        if (p === 0) dot.classList.add('active');
+                        dotsContainer.appendChild(dot);
+                    }
 
-                        // Boundary calculation
-                        const itemH = (img.naturalHeight / img.naturalWidth) * itemW;
-                        const maxX = window.innerWidth - itemW - 40;
-                        const maxY = window.innerHeight - (itemH + 30) - 40;
+                    // Mobile Scroll Listener for Dots
+                    container.onscroll = () => {
+                        const pageW = window.innerWidth;
+                        const scrollLeft = container.scrollLeft;
+                        const activeIndex = Math.round(scrollLeft / pageW);
 
-                        const randX = 20 + Math.random() * maxX;
-                        const randY = 20 + Math.random() * maxY;
-                        const randRot = (Math.random() - 0.5) * 30;
-
-                        item.style.left = `${randX}px`;
-                        item.style.top = `${randY}px`;
-                        item.style.transform = `rotate(${randRot}deg)`;
-                        item.style.opacity = '1';
-
-                        initCollageDrag(item);
+                        document.querySelectorAll('.collage-dot').forEach((d, idx) => {
+                            if (idx === activeIndex) d.classList.add('active');
+                            else d.classList.remove('active');
+                        });
                     };
+
+                } else {
+                    // --- Desktop: Original Scattered Logic ---
+                    dotsContainer.style.display = 'none';
+
+                    for (let i = 1; i <= count; i++) {
+                        const item = document.createElement('div');
+                        item.className = 'collage-item';
+                        item.style.opacity = '0';
+                        item.style.transition = 'opacity 0.5s ease, transform 0.3s cubic-bezier(0.2, 0, 0.2, 1)';
+
+                        const img = createImgElement(folder, i, 'webp');
+                        item.appendChild(img);
+                        container.appendChild(item);
+
+                        img.onload = () => {
+                            const isPortrait = img.naturalHeight > img.naturalWidth;
+
+                            let minW = 250, maxW = 330; // Desktop sizes
+                            if (!isPortrait) {
+                                minW = 350; maxW = 520;
+                            }
+
+                            const itemW = minW + Math.random() * (maxW - minW);
+                            item.style.width = `${itemW}px`;
+
+                            const itemH = (img.naturalHeight / img.naturalWidth) * itemW;
+                            const maxX = window.innerWidth - itemW - 40;
+                            const maxY = window.innerHeight - (itemH + 30) - 40;
+
+                            const randX = 20 + Math.random() * maxX;
+                            const randY = 20 + Math.random() * maxY;
+                            const randRot = (Math.random() - 0.5) * 30;
+
+                            item.style.left = `${randX}px`;
+                            item.style.top = `${randY}px`;
+                            item.style.transform = `rotate(${randRot}deg)`;
+                            item.style.opacity = '1';
+
+                            initCollageDrag(item);
+                        };
+                    }
                 }
             }
 
-            function initCollageDrag(el) {
-                let isDragging = false;
-                let startX, startY;
 
-                const startMove = (e) => {
-                    isDragging = false; // Reset on start
-                    const event = e.touches ? e.touches[0] : e;
-                    startX = event.clientX;
-                    startY = event.clientY;
-
-                    const initialOffsetLeft = el.offsetLeft;
-                    const initialOffsetTop = el.offsetTop;
-
-                    const onMouseMove = (moveEvent) => {
-                        const mEvent = moveEvent.touches ? moveEvent.touches[0] : moveEvent;
-                        const dx = mEvent.clientX - startX;
-                        const dy = mEvent.clientY - startY;
-
-                        if (!isDragging && (Math.abs(dx) > 5 || Math.abs(dy) > 5)) {
-                            isDragging = true;
-                            el.style.zIndex = ++collageZ;
-                            el.style.transition = 'none';
-                            el.style.cursor = 'grabbing';
-                        }
-
-                        if (isDragging) {
-                            el.style.left = `${initialOffsetLeft + dx}px`;
-                            el.style.top = `${initialOffsetTop + dy}px`;
-                        }
-                    };
-
-                    const onMouseUp = () => {
-                        window.removeEventListener('mousemove', onMouseMove);
-                        window.removeEventListener('mouseup', onMouseUp);
-                        window.removeEventListener('touchmove', onMouseMove);
-                        window.removeEventListener('touchend', onMouseUp);
-
-                        if (!isDragging) {
-                            // It was a click!
-                            openCollageLightbox(el);
-                        } else {
-                            el.style.transition = 'transform 0.3s cubic-bezier(0.2, 0, 0.2, 1)';
-                            el.style.cursor = 'grab';
-                        }
-                    };
-
-                    window.addEventListener('mousemove', onMouseMove);
-                    window.addEventListener('mouseup', onMouseUp);
-                    window.addEventListener('touchmove', onMouseMove, { passive: false });
-                    window.addEventListener('touchend', onMouseUp);
-                };
-
-                el.addEventListener('mousedown', startMove);
-                el.addEventListener('touchstart', startMove, { passive: true });
-            }
 
             function openCollageLightbox(el) {
                 currentActiveItem = el;
                 const lightbox = document.getElementById('collage-lightbox');
                 const img = document.getElementById('lightbox-img');
                 img.src = el.querySelector('img').src;
+
+                // Reset Zoom State
+                lightboxState = { scale: 1, x: 0, y: 0 };
+                updateTransform();
+                img.classList.remove('zoomed'); // Legacy cleanup
+
                 lightbox.style.display = 'flex';
                 setTimeout(() => lightbox.classList.add('active'), 10);
+            }
+
+            // --- 3D 畫廊邏輯 (3D Gallery Logic) ---
+            let galleryRadius = 0;
+            let galleryAngle = 0;
+            let currentGalleryCount = 0;
+
+            function openGalleryViewer(folder, count) {
+                const overlay = document.getElementById('gallery-overlay');
+                const spinner = document.getElementById('gallery-spinner');
+                spinner.innerHTML = '';
+                currentGalleryCount = count;
+
+                // Show overlay
+                overlay.style.display = 'block';
+                setTimeout(() => overlay.classList.add('active'), 10);
+                document.body.style.overflow = 'hidden';
+
+                // Calculate Radius
+                const isMob = window.innerWidth < 768;
+                const panelWidth = isMob ? 160 : 250; // Match CSS #gallery-spinner width
+                const tanVal = Math.tan(Math.PI / count);
+                galleryRadius = Math.round((panelWidth / 2) / tanVal);
+
+                // Adjust radius slightly if too tight or too wide
+                // For small counts, radius might be small, for large counts huge.
+                // Clamp radius for better visual? Or let it be. 
+                // Let's add a minimum gap spacing
+                galleryRadius = Math.max(galleryRadius, panelWidth * 1.5);
+
+                // Inject Items with Staggered Loading
+                const loadBatch = (start, end) => {
+                    for (let i = start; i <= end; i++) {
+                        const item = document.createElement('div');
+                        item.className = 'gallery-item';
+                        const angle = (360 / count) * (i - 1);
+                        item.style.transform = `rotateY(${angle}deg) translateZ(${galleryRadius}px)`;
+                        const img = createImgElement(folder, i, 'webp');
+                        item.appendChild(img);
+                        spinner.appendChild(item);
+                    }
+                };
+
+                // Load first 6 immediately, then stagger rest
+                const initial = Math.min(6, count);
+                loadBatch(1, initial);
+
+                if (count > initial) {
+                    let current = initial + 1;
+                    const staggerInterval = setInterval(() => {
+                        if (current > count) {
+                            clearInterval(staggerInterval);
+                            return;
+                        }
+                        // Batch 3 at a time for efficiency
+                        const end = Math.min(current + 2, count);
+                        loadBatch(current, end);
+                        current = end + 1;
+                    }, 100);
+                }
+
+                // Initial Position
+                galleryAngle = 0;
+                spinner.style.transform = `translateZ(-${galleryRadius}px) rotateY(0deg)`;
+
+                initGalleryDrag();
+            }
+
+            function initGalleryDrag() {
+                if (window.galleryDragInitialized) return;
+                window.galleryDragInitialized = true;
+
+                // Listen on overlay effectively (or window)
+                const stage = document.getElementById('gallery-overlay');
+                const spinner = document.getElementById('gallery-spinner');
+
+                let startX, currentX;
+                let isDragging = false;
+                let startAngle = 0;
+                let lastX = 0;
+                let velocity = 0;
+                let lastTime = 0;
+
+                const onDown = (e) => {
+                    // Only start if clicking stage or spinner, not buttons
+                    if (e.target.closest('.close-book') || e.target.closest('.back-book')) return;
+
+                    isDragging = true;
+                    spinner.classList.remove('inertia'); // Stop inertia when grabbed
+                    spinner.style.transition = 'none'; // PERFORMANCE: Disable transition during drag
+
+                    velocity = 0;
+                    startX = e.touches ? e.touches[0].clientX : e.clientX;
+                    currentX = startX; // Fix: Initialize currentX for 0-move taps
+                    lastX = startX;
+                    lastTime = performance.now();
+
+                    startAngle = galleryAngle;
+                    // stage is overlay now, so cursor change works if overlay has pointer events
+                    stage.style.cursor = 'grabbing';
+                };
+
+                const onMove = (e) => {
+                    if (!isDragging) return;
+                    e.preventDefault(); // Prevent scroll on mobile
+                    currentX = e.touches ? e.touches[0].clientX : e.clientX;
+
+                    const now = performance.now();
+                    const dt = now - lastTime;
+                    const dx = currentX - startX;
+                    const deltaX = currentX - lastX;
+
+                    if (dt > 0) {
+                        velocity = deltaX / dt;
+                    }
+
+                    lastX = currentX;
+                    lastTime = now;
+
+                    const sensitivity = 0.25;
+                    galleryAngle = startAngle + (dx * sensitivity);
+
+                    spinner.style.transform = `translateZ(-${galleryRadius}px) rotateY(${galleryAngle}deg)`;
+                };
+
+                const onUp = (e) => {
+                    if (!isDragging) return;
+                    isDragging = false;
+                    stage.style.cursor = 'default';
+                    spinner.style.transition = ''; // Restore CSS transition
+                    spinner.classList.add('inertia'); // Add inertia back
+
+                    // Tap Detection
+                    // If movement is very small, treat as click
+                    const totalDist = Math.abs(currentX - startX);
+                    if (totalDist < 30) {
+                        // Use elementFromPoint to find what is *currently* under the finger
+                        const clientX = e.changedTouches ? e.changedTouches[0].clientX : e.clientX;
+                        const clientY = e.changedTouches ? e.changedTouches[0].clientY : e.clientY;
+
+                        const actualTarget = document.elementFromPoint(clientX, clientY);
+                        const targetItem = actualTarget ? actualTarget.closest('.gallery-item') : null;
+
+                        if (targetItem) {
+                            // Prevent ghost click that might toggle zoom immediately
+                            if (e.cancelable) e.preventDefault();
+                            openCollageLightbox(targetItem);
+                            return; // Stop momentum if tap
+                        }
+                    }
+
+                    // Apply Momentum
+                    const friction = 30;
+                    const momentumAngle = velocity * friction;
+
+                    if (Math.abs(momentumAngle) > 1) {
+                        galleryAngle += momentumAngle;
+                        spinner.style.transform = `translateZ(-${galleryRadius}px) rotateY(${galleryAngle}deg)`;
+                    }
+                };
+
+                // Use addEventListener for better mobile support (passive: false)
+                stage.addEventListener('mousedown', onDown);
+                stage.addEventListener('touchstart', onDown, { passive: false });
+
+                window.addEventListener('mousemove', onMove);
+                window.addEventListener('touchmove', onMove, { passive: false });
+
+                window.addEventListener('mouseup', onUp);
+                window.addEventListener('touchend', onUp);
             }
 
             function closeCollageLightbox() {
@@ -1692,48 +1893,211 @@
                 lightbox.classList.remove('active');
                 setTimeout(() => {
                     lightbox.style.display = 'none';
-                    if (currentActiveItem && !currentActiveItem.classList.contains('hanging')) {
-                        hangItem(currentActiveItem);
-                    }
+                    // Reset zoom on close
+                    const img = document.getElementById('lightbox-img');
+                    if (img) img.classList.remove('zoomed');
                 }, 400);
             }
 
-            function hangItem(el) {
-                if (el.classList.contains('hanging')) return;
+            // --- Advanced Zoom & Pan Logic for Lightbox ---
+            let lightboxState = { scale: 1, x: 0, y: 0 };
+            let lightboxDrag = { startX: 0, startY: 0, isDragging: false };
+            let pinchStart = { dist: 0, scale: 1 };
 
-                el.classList.add('hanging');
-                const isMob = window.innerWidth <= 768;
+            function initLightboxZoom() {
+                const img = document.getElementById('lightbox-img');
+                const container = document.getElementById('collage-lightbox');
+                if (!img || !container) return;
 
-                // --- 智慧置中與尺寸優化 ---
-                const containerW = window.innerWidth;
-                const itemW = isMob ? 95 : 160;
-                const spacing = isMob ? 110 : 185;
+                // Reset state on init
+                lightboxState = { scale: 1, x: 0, y: 0 };
+                updateTransform();
 
-                let itemsPerRow = Math.floor((containerW - (isMob ? 20 : 60)) / spacing);
-                if (itemsPerRow < 1) itemsPerRow = 1;
+                // Desktop Wheel Zoom
+                container.onwheel = (e) => {
+                    e.preventDefault();
+                    // Zoom towards mouse cursor could be complex, start with center zoom
+                    const delta = -e.deltaY;
+                    const factor = delta > 0 ? 1.1 : 0.9;
 
-                const totalUsedW = (itemsPerRow - 1) * spacing + itemW;
-                const startLeft = (containerW - totalUsedW) / 2;
+                    const oldScale = lightboxState.scale;
+                    let newScale = oldScale * factor;
+                    newScale = Math.min(Math.max(1, newScale), 5); // Limit zoom 1x to 5x
 
-                // Position on rope
-                const rope = document.getElementById('collage-rope');
-                const ropeTop = rope.offsetTop;
+                    // Adjust Scale
+                    lightboxState.scale = newScale;
 
-                // Horizontal wrapping logic
-                const row = Math.floor(hungCount / itemsPerRow);
-                const col = hungCount % itemsPerRow;
+                    // If zoomed out completely, reset pan
+                    if (newScale === 1) {
+                        lightboxState.x = 0;
+                        lightboxState.y = 0;
+                    }
 
-                const targetLeft = startLeft + (col * spacing);
-                const targetTop = ropeTop - (isMob ? 8 : 10) + (row * (isMob ? 150 : 230));
+                    updateTransform();
+                };
 
-                el.style.transition = 'all 0.8s cubic-bezier(0.34, 1.56, 0.64, 1)';
-                el.style.width = `${itemW}px`;
-                el.style.left = `${targetLeft}px`;
-                el.style.top = `${targetTop}px`;
-                el.style.transform = `rotate(${(Math.random() - 0.5) * 10}deg)`;
-                el.style.zIndex = 10 + hungCount;
+                // Desktop Pan (Mouse) with click-to-zoom and drag detection
+                img.onmousedown = (e) => {
+                    e.preventDefault(); // Stop default drag
+                    if (lightboxState.scale <= 1) return;
 
-                hungCount++;
+                    lightboxDrag.isDragging = true;
+                    lightboxDrag.hasMoved = false; // track if user actually drags (so click won't toggle zoom)
+                    lightboxDrag.startX = e.clientX - lightboxState.x;
+                    lightboxDrag.startY = e.clientY - lightboxState.y;
+                    img.style.cursor = 'grabbing';
+                };
+
+                window.addEventListener('mousemove', (e) => {
+                    if (!lightboxDrag.isDragging) return;
+                    e.preventDefault();
+                    const newX = e.clientX - lightboxDrag.startX;
+                    const newY = e.clientY - lightboxDrag.startY;
+                    // movement threshold to distinguish click vs drag
+                    if (!lightboxDrag.hasMoved && (Math.abs(newX - lightboxState.x) > 3 || Math.abs(newY - lightboxState.y) > 3)) {
+                        lightboxDrag.hasMoved = true;
+                    }
+                    lightboxState.x = newX;
+                    lightboxState.y = newY;
+                    updateTransform();
+                });
+
+                window.addEventListener('mouseup', (e) => {
+                    if (lightboxDrag.isDragging) {
+                        lightboxDrag.isDragging = false;
+                        const imgEl = document.getElementById('lightbox-img');
+                        if (imgEl) imgEl.style.cursor = 'default'; // cursor handling
+                        // short timeout to allow click event to check moved flag
+                        setTimeout(() => { lightboxDrag.hasMoved = false; }, 50);
+                    }
+                });
+
+                // Prevent overlay close when interacting with image; toggle zoom on click (cycle 1 -> 2 -> 4 -> 1)
+                img.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    // If we just dragged, don't treat as click to toggle zoom
+                    if (lightboxDrag.hasMoved) {
+                        lightboxDrag.hasMoved = false;
+                        return;
+                    }
+                    const levels = [1, 2, 4];
+                    const cur = lightboxState.scale || 1;
+                    let idx = levels.findIndex(l => Math.abs(cur - l) < 0.5);
+                    if (idx === -1) {
+                        // choose closest
+                        idx = levels.map(l => Math.abs(cur - l)).reduce((minI, x, i, arr) => x < arr[minI] ? i : minI, 0);
+                    }
+                    const next = levels[(idx + 1) % levels.length];
+                    if (next === 1) {
+                        lightboxState = { scale: 1, x: 0, y: 0 };
+                    } else {
+                        lightboxState.scale = next;
+                    }
+                    updateTransform();
+                });
+
+                // Touch single-tap support: prevent close and toggle zoom on tap
+                let lastTouchEnd = 0;
+                img.addEventListener('touchend', (e) => {
+                    e.stopPropagation();
+                    const now = Date.now();
+                    // avoid double triggers
+                    if (Math.abs(now - lastTouchEnd) < 300) return;
+                    if (lightboxDrag.isDragging) return;
+                    const levels = [1, 2, 4];
+                    const cur = lightboxState.scale || 1;
+                    let idx = levels.findIndex(l => Math.abs(cur - l) < 0.5);
+                    if (idx === -1) idx = levels.map(l => Math.abs(cur - l)).reduce((minI, x, i, arr) => x < arr[minI] ? i : minI, 0);
+                    const next = levels[(idx + 1) % levels.length];
+                    if (next === 1) {
+                        lightboxState = { scale: 1, x: 0, y: 0 };
+                    } else {
+                        lightboxState.scale = next;
+                    }
+                    updateTransform();
+                    lastTouchEnd = now;
+                });
+
+                // Mobile Pinch & Pan
+                // Using container listeners to catch everything
+                container.addEventListener('touchstart', onTouchStart, { passive: false });
+                container.addEventListener('touchmove', onTouchMove, { passive: false });
+                container.addEventListener('touchend', onTouchEnd);
+            }
+
+            // Mobile Touch Handlers
+            let lastTouchX = 0, lastTouchY = 0;
+
+            function onTouchStart(e) {
+                if (e.touches.length === 1) {
+                    // Pan Start
+                    if (lightboxState.scale > 1) {
+                        lightboxDrag.isDragging = true;
+                        lastTouchX = e.touches[0].clientX;
+                        lastTouchY = e.touches[0].clientY;
+                    }
+                } else if (e.touches.length === 2) {
+                    // Pinch Start
+                    lightboxDrag.isDragging = false; // Stop panning
+                    const dist = getDist(e.touches[0], e.touches[1]);
+                    pinchStart = { dist: dist, scale: lightboxState.scale };
+                }
+            }
+
+            function onTouchMove(e) {
+                if (e.touches.length === 1 && lightboxDrag.isDragging) {
+                    // Pan Move
+                    e.preventDefault();
+                    const dx = e.touches[0].clientX - lastTouchX;
+                    const dy = e.touches[0].clientY - lastTouchY;
+
+                    lightboxState.x += dx;
+                    lightboxState.y += dy;
+
+                    lastTouchX = e.touches[0].clientX;
+                    lastTouchY = e.touches[0].clientY;
+
+                    updateTransform();
+
+                } else if (e.touches.length === 2) {
+                    // Pinch Move
+                    e.preventDefault();
+                    const dist = getDist(e.touches[0], e.touches[1]);
+                    const scaleFactor = dist / pinchStart.dist;
+
+                    let newScale = pinchStart.scale * scaleFactor;
+                    newScale = Math.min(Math.max(1, newScale), 5);
+
+                    lightboxState.scale = newScale;
+                    if (newScale === 1) {
+                        lightboxState.x = 0;
+                        lightboxState.y = 0;
+                    }
+                    updateTransform();
+                }
+            }
+
+            function onTouchEnd(e) {
+                if (e.touches.length < 2) {
+                    // reset pinch logic?
+                }
+                if (e.touches.length === 0) {
+                    lightboxDrag.isDragging = false;
+                }
+            }
+
+            function getDist(t1, t2) {
+                return Math.hypot(t1.clientX - t2.clientX, t1.clientY - t2.clientY);
+            }
+
+            function updateTransform() {
+                const img = document.getElementById('lightbox-img');
+                if (!img) return;
+                // Clamp Pan to view
+                // Simple clamp: don't let edge cross center? 
+                // For now, free pan (user requested "drag where they want")
+
+                img.style.transform = `translate(${lightboxState.x}px, ${lightboxState.y}px) scale(${lightboxState.scale})`;
             }
 
             // --- NEW: Zoom & Pan Logic ---
@@ -1832,9 +2196,22 @@
 
             function createImgElement(folder, i, ext) {
                 const img = document.createElement('img');
-                img.loading = 'lazy';      // Defer loading off-screen images
-                img.decoding = 'async';    // Non-blocking image decoding
-                img.onerror = () => {
+                img.loading = 'lazy';
+                img.decoding = 'async';
+                img.dataset.fallbackStage = '0';
+
+                img.onerror = function () {
+                    // If we first tried webp, fallback to jpg then png
+                    if (ext === 'webp' && img.dataset.fallbackStage === '0') {
+                        img.dataset.fallbackStage = '1';
+                        img.src = `${folder}/${i}.jpg`;
+                        return;
+                    }
+                    if (ext === 'webp' && img.dataset.fallbackStage === '1') {
+                        img.dataset.fallbackStage = '2';
+                        img.src = `${folder}/${i}.png`;
+                        return;
+                    }
                     console.error("Failed to load image:", img.src);
                     const errorText = document.createElement('div');
                     errorText.style.color = "white";
@@ -1842,8 +2219,9 @@
                     errorText.style.background = "rgba(255,0,0,0.5)";
                     errorText.style.padding = "5px";
                     errorText.innerText = `Image not found: ${folder}/${i}.${ext}`;
-                    img.parentNode.appendChild(errorText); // Append to slide
+                    if (img.parentNode) img.parentNode.appendChild(errorText);
                 };
+
                 img.src = `${folder}/${i}.${ext}`;
                 return img;
             }
@@ -1856,14 +2234,14 @@
 
             function closeBook() {
                 const bookOverlay = document.getElementById('book-overlay');
-                const collageOverlay = document.getElementById('collage-overlay');
+                const galleryOverlay = document.getElementById('gallery-overlay');
 
                 bookOverlay.classList.remove('active');
-                collageOverlay.classList.remove('active');
+                if (galleryOverlay) galleryOverlay.classList.remove('active');
 
                 setTimeout(() => {
                     bookOverlay.style.display = 'none';
-                    collageOverlay.style.display = 'none';
+                    if (galleryOverlay) galleryOverlay.style.display = 'none';
                 }, 400);
                 document.body.style.overflow = 'auto';
             }
@@ -1880,7 +2258,12 @@
                 if (heroSlides.length > 0) {
                     // 1. Random Start
                     let heroIndex = Math.floor(Math.random() * heroSlides.length);
-                    heroSlides[heroIndex].classList.add('active');
+                    const startSlide = heroSlides[heroIndex];
+                    if (startSlide.dataset.src) {
+                        startSlide.src = startSlide.dataset.src;
+                        startSlide.removeAttribute('data-src');
+                    }
+                    startSlide.classList.add('active');
                     console.log("Hero Random Start Index:", heroIndex);
 
                     // 2. Auto Cycle
@@ -1900,7 +2283,78 @@
                 }
             });
 
-            // --- NEW: Loader Logic ---
+            // --- NEW: Loader Logic with Image Preloading ---
+            function getAllImageUrls() {
+                const urls = new Set();
+
+                // Collect from <img> tags (src and data-src)
+                document.querySelectorAll('img').forEach(img => {
+                    const dsrc = img.getAttribute('data-src');
+                    if (dsrc) urls.add(new URL(dsrc, location.href).href);
+                    try {
+                        if (img.src && !img.src.startsWith('data:')) urls.add(img.src);
+                    } catch (e) { /* ignore malformed */ }
+                });
+
+                // Collect data-src attributes from other elements
+                document.querySelectorAll('[data-src]').forEach(el => {
+                    const v = el.getAttribute('data-src');
+                    if (v) urls.add(new URL(v, location.href).href);
+                });
+
+                // Collect background-image from computed styles
+                document.querySelectorAll('*').forEach(el => {
+                    try {
+                        const bg = getComputedStyle(el).backgroundImage;
+                        if (bg && bg !== 'none') {
+                            const matches = bg.match(/url\(["']?(.*?)["']?\)/g);
+                            if (matches) {
+                                matches.forEach(m => {
+                                    const url = m.replace(/url\(["']?/, '').replace(/["']?\)$/, '');
+                                    if (url && !url.startsWith('data:')) {
+                                        try { urls.add(new URL(url, location.href).href); } catch (e) { urls.add(url); }
+                                    }
+                                });
+                            }
+                        }
+                    } catch (e) { /* ignore cross-origin or computed style errors */ }
+                });
+
+                return Array.from(urls);
+            }
+
+            function preloadImages(urls, onProgress, timeoutMs = 8000) {
+                return new Promise(resolve => {
+                    if (!urls || urls.length === 0) {
+                        if (onProgress) onProgress(1, 1);
+                        resolve();
+                        return;
+                    }
+
+                    let loaded = 0;
+                    const total = urls.length;
+                    let finished = false;
+
+                    const timer = setTimeout(() => {
+                        if (!finished) { finished = true; resolve(); }
+                    }, timeoutMs);
+
+                    urls.forEach(url => {
+                        const img = new Image();
+                        img.onload = img.onerror = () => {
+                            loaded++;
+                            if (onProgress) onProgress(loaded, total);
+                            if (loaded >= total && !finished) {
+                                clearTimeout(timer);
+                                finished = true;
+                                resolve();
+                            }
+                        };
+                        img.src = url;
+                    });
+                });
+            }
+
             function initLoader() {
                 const loader = document.getElementById('loader');
                 const percentText = document.getElementById('percent');
@@ -1915,38 +2369,75 @@
                     yoyo: true
                 });
 
-                let progress = 0;
-                const interval = setInterval(() => {
-                    progress += Math.floor(Math.random() * 5) + 2;
-                    if (progress >= 100) {
-                        progress = 100;
-                        clearInterval(interval);
-
-                        gsap.to(loader, {
-                            opacity: 0,
-                            duration: 1,
-                            ease: "power2.inOut",
-                            onComplete: () => {
-                                loader.style.display = 'none';
-                                document.body.style.overflow = 'auto'; // Re-enable scroll
-                            }
-                        });
+                const urls = getAllImageUrls();
+                let lastPercent = 0;
+                function setPercent(n) {
+                    const p = Math.min(100, Math.round(n));
+                    if (p !== lastPercent) {
+                        lastPercent = p;
+                        percentText.innerText = p;
                     }
-                    percentText.innerText = progress;
-                }, 80);
+                }
+
+                if (!urls.length) {
+                    // No images to preload — just finish loader quickly
+                    setPercent(100);
+                    gsap.to(loader, {
+                        opacity: 0,
+                        duration: 0.8,
+                        ease: "power2.inOut",
+                        onComplete: () => {
+                            loader.style.display = 'none';
+                            document.body.style.overflow = 'auto';
+                        }
+                    });
+                    return;
+                }
+
+                // Start preloading and update percent based on progress
+                preloadImages(urls, (loaded, total) => {
+                    // Map to 0..95% while loading, reserve last 5% for final animation
+                    const percent = (loaded / total) * 95;
+                    setPercent(percent);
+                }, 10000 /* timeout 10s */).then(() => {
+                    // Animate to 100% then hide loader
+                    gsap.to({ p: lastPercent }, {
+                        p: 100,
+                        duration: 0.6,
+                        onUpdate: function () { setPercent(this.targets()[0].p); },
+                        onComplete: function () {
+                            gsap.to(loader, {
+                                opacity: 0,
+                                duration: 0.8,
+                                ease: "power2.inOut",
+                                onComplete: () => {
+                                    loader.style.display = 'none';
+                                    document.body.style.overflow = 'auto';
+                                }
+                            });
+                        }
+                    });
+                });
             }
 
             // --- NEW: Menu Hover Images Preloader ---
             function preloadMenuImages() {
                 const hoverImages = [
-                    'midle.png',
-                    'modelmenu.JPG',
-                    'proposal.jpg',
-                    'kai.png'
+                    'midle.webp',
+                    'modelmenu.webp',
+                    'proposal.webp',
+                    'kai.webp'
                 ];
                 hoverImages.forEach(img => {
                     const i = new Image();
                     i.src = img;
+                    i.onerror = () => {
+                        // If webp not available, try original names
+                        if (img.endsWith('.webp')) {
+                            const fallback = img.replace('.webp', '.png');
+                            i.src = fallback;
+                        }
+                    };
                 });
                 console.log("Menu hover images preloaded.");
             }
@@ -1971,6 +2462,7 @@
                 initLoader();
                 // Delay preloading slightly after initial load to prioritize main assets
                 setTimeout(preloadMenuImages, 2000);
+                initLightboxZoom(); // Initialize light box zoom/pan logic
             });
         </script>
 </body>
