@@ -381,7 +381,7 @@
             width: 100%;
         }
 
-        .vertical-mode .img-slide img {
+        #image-viewer.vertical-mode .img-slide img {
             max-width: 90vw;
             max-height: 48vh;
             margin: 0.5vh 0;
@@ -1507,7 +1507,7 @@
                         openBook(folderName, counts[category], ext, mode);
                         // Show Back Button explicitly for Grad projects
                     }
-                    document.querySelector('.back-book').style.display = 'block';
+                    document.querySelectorAll('.back-book').forEach(el => el.style.display = 'block');
                 }, 300);
             }
 
@@ -1591,6 +1591,10 @@
                         setTimeout(() => loadSingle(initial + 1, count), 150);
                     }
                 }
+
+                // Toggle arrows based on mode
+                const arrows = document.querySelectorAll('.nav-arrow');
+                arrows.forEach(el => el.style.display = (mode === 'vertical') ? 'none' : 'block');
 
                 initZoomLogic(); // Enable zoom for all modes
                 const overlay = document.getElementById('book-overlay');
