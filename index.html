@@ -1524,104 +1524,82 @@
                 }, 300);
             }
 
-            // --- Active Memory Manager (Virtualization) ---
+            // --- Lazy Loading & Preload Control ---
             let backgroundPreloadActive = true;
-            let memManagerInterval = null;
+            let observer = null;
 
             function stopBackgroundPreload() {
                 backgroundPreloadActive = false;
                 console.log("Background preload paused for user interaction.");
             }
 
-            // Aggressive memory release
-            function initMemoryManager(viewer) {
-                if (memManagerInterval) clearInterval(memManagerInterval);
+            function initLazyObserver(viewer) {
+                if (observer) observer.disconnect();
 
-                const updateVisibility = () => {
-                    const scrollLeft = viewer.scrollLeft;
-                    const width = viewer.offsetWidth;
-                    if (width === 0) return; // invisible
-
-                    const currentIndex = Math.round(scrollLeft / width);
-
-                    // SAFE ZONE: Current +/- 1 slide. 
-                    // Everything else MUST be unloaded to save memory (35MP images = ~130MB RAM each)
-                    const minIdx = currentIndex - 1;
-                    const maxIdx = currentIndex + 1;
-
-                    const slides = viewer.querySelectorAll('.img-slide');
-                    slides.forEach((slide, idx) => {
-                        const imgs = slide.querySelectorAll('img');
-
-                        if (idx >= minIdx && idx <= maxIdx) {
-                            // LOAD
+                observer = new IntersectionObserver((entries) => {
+                    entries.forEach(entry => {
+                        if (entry.isIntersecting) {
+                            const slide = entry.target;
+                            const imgs = slide.querySelectorAll('img[data-lazy-src]');
                             imgs.forEach(img => {
-                                if (!img.src && img.dataset.lazySrc) {
-                                    img.src = img.dataset.lazySrc;
-                                }
+                                img.src = img.dataset.lazySrc;
+                                img.removeAttribute('data-lazy-src');
                             });
-                        } else {
-                            // UNLOAD (Virtualize)
-                            imgs.forEach(img => {
-                                if (img.src && img.src !== "") {
-                                    img.removeAttribute('src'); // Force drop from RAM
-                                }
-                            });
+                            observer.unobserve(slide);
                         }
                     });
-                };
-
-                // Run on scroll (throttled)
-                let ticking = false;
-                viewer.addEventListener('scroll', () => {
-                    if (!ticking) {
-                        window.requestAnimationFrame(() => {
-                            updateVisibility();
-                            ticking = false;
-                        });
-                        ticking = true;
-                    }
-                }, { passive: true });
-
-                // Run immediately to load initial
-                setTimeout(updateVisibility, 50);
+                }, {
+                    root: viewer,
+                    rootMargin: '100% 0px' // Preload 1 screen ahead
+                });
             }
 
-            // 3. 左右翻頁圖片瀏覽器 (Virtual Memory Version)
+            // 3. 左右翻頁圖片瀏覽器 (Lazy Load Version)
             function openBook(folder, count, ext = 'webp', mode = 'single') {
-                stopBackgroundPreload();
+                stopBackgroundPreload(); // Stop background tasks immediately
+
+                // Reset state: Hide back button by default
                 document.querySelector('.back-book').style.display = 'none';
 
                 const viewer = document.getElementById('image-viewer');
                 viewer.innerHTML = '';
 
-                // Helper: Create image with persistent data-lazy-src
-                const createVirtualImg = (f, i, e) => {
+                // Initialize Lazy Observer
+                initLazyObserver(viewer);
+
+                // Helper to create lazy image
+                const createLazyImg = (f, i, e, eager = false) => {
                     const img = document.createElement('img');
                     img.decoding = 'sync';
                     img.dataset.fallbackStage = '0';
                     const src = `${f}/${i}.${e}`;
 
-                    img.dataset.lazySrc = src;
-                    // Initial state: EMPTY. Let memory manager load it if visible.
-
                     img.onerror = function () {
-                        // Fallback logic
+                        // Fallback logic (WebP -> JPG -> PNG)
                         if (e === 'webp' && img.dataset.fallbackStage === '0') {
                             img.dataset.fallbackStage = '1';
-                            const newSrc = `${f}/${i}.jpg`;
-                            img.dataset.lazySrc = newSrc; // Update source of truth
-                            img.src = newSrc;
+                            img.src = `${f}/${i}.jpg`;
                             return;
                         }
                         if (e === 'webp' && img.dataset.fallbackStage === '1') {
                             img.dataset.fallbackStage = '2';
-                            const newSrc = `${f}/${i}.png`;
-                            img.dataset.lazySrc = newSrc;
-                            img.src = newSrc;
+                            img.src = `${f}/${i}.png`;
                             return;
                         }
                     };
+
+                    if (eager) {
+                        img.loading = 'eager';
+                        img.src = src;
+                    } else {
+                        img.dataset.lazySrc = src;
+                        // Placeholder or transparent pixel could go here if needed to hold space, 
+                        // but CSS sizing usually handles it if aspect ratio is known.
+                        // Here we rely on the container sizing.
+                        // To prevent collapse, we might need a placeholder src or style.
+                        // For now, let's just leave src empty, but style it.
+                        img.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7'; // Transparent 1x1
+                    }
                     return img;
                 };
 
@@ -1629,27 +1607,31 @@
                     viewer.classList.add('spread-mode');
                     viewer.classList.remove('vertical-mode');
 
-                    // 1. Cover
+                    // 1. Cover (Always Eager)
                     const coverSlide = document.createElement('div');
                     coverSlide.className = 'img-slide';
                     const wrapper = document.createElement('div');
                     wrapper.className = 'zoom-wrapper';
-                    wrapper.appendChild(createVirtualImg(folder, 1, ext));
+                    wrapper.appendChild(createLazyImg(folder, 1, ext, true));
                     coverSlide.appendChild(wrapper);
                     viewer.appendChild(coverSlide);
 
-                    // 2. Spreads
+                    // 2. Rest (Lazy)
+                    // Load first spread (pg 2-3) eager as well for smoothness
                     for (let i = 2; i <= count; i += 2) {
                         const slide = document.createElement('div');
                         slide.className = 'img-slide';
                         const w = document.createElement('div');
                         w.className = 'zoom-wrapper';
 
-                        w.appendChild(createVirtualImg(folder, i, ext));
-                        if (i + 1 <= count) w.appendChild(createVirtualImg(folder, i + 1, ext));
+                        const isNearStart = i <= 4; // Preload pg 2,3,4,5
+                        w.appendChild(createLazyImg(folder, i, ext, isNearStart));
+                        if (i + 1 <= count) w.appendChild(createLazyImg(folder, i + 1, ext, isNearStart));
 
                         slide.appendChild(w);
                         viewer.appendChild(slide);
+
+                        if (!isNearStart) observer.observe(slide);
                     }
 
                 } else if (mode === 'vertical') {
@@ -1661,11 +1643,12 @@
                     const wrapper = document.createElement('div');
                     wrapper.className = 'zoom-wrapper';
 
-                    // Load all for vertical (small count assumption)
+                    // Vertical mode is a single long scroll, logic differs slightly.
+                    // Observer should watch individual images or blocks.
+                    // Simplification: For vertical (Design), it's usually just 2 images. Load all.
+                    // If vertical gets long, we need wrapper intersection.
                     for (let i = 1; i <= count; i++) {
-                        const img = createVirtualImg(folder, i, ext);
-                        img.src = img.dataset.lazySrc;
-                        wrapper.appendChild(img);
+                        wrapper.appendChild(createLazyImg(folder, i, ext, true));
                     }
                     slide.appendChild(wrapper);
                     viewer.appendChild(slide);
@@ -1680,9 +1663,14 @@
                         slide.className = 'img-slide';
                         const w = document.createElement('div');
                         w.className = 'zoom-wrapper';
-                        w.appendChild(createVirtualImg(folder, i, ext));
+
+                        const isNearStart = i <= 3; // First 3 pages eager
+                        w.appendChild(createLazyImg(folder, i, ext, isNearStart));
                         slide.appendChild(w);
+
                         viewer.appendChild(slide);
+
+                        if (!isNearStart) observer.observe(slide);
                     }
                 }
 
@@ -1690,13 +1678,7 @@
                 const arrows = document.querySelectorAll('.nav-arrow');
                 arrows.forEach(el => el.style.display = (mode === 'vertical') ? 'none' : 'block');
 
-                initZoomLogic();
-
-                // Initialize Memory Manager (Only for horizontal scrollers)
-                if (mode !== 'vertical') {
-                    initMemoryManager(viewer);
-                }
-
+                initZoomLogic(); // Enable zoom
                 const overlay = document.getElementById('book-overlay');
                 overlay.style.display = 'block';
                 setTimeout(() => overlay.classList.add('active'), 10);
