@@ -1524,48 +1524,116 @@
                 }, 300);
             }
 
-            // 3. 左右翻頁圖片瀏覽器
+            // --- Lazy Loading & Preload Control ---
+            let backgroundPreloadActive = true;
+            let observer = null;
+
+            function stopBackgroundPreload() {
+                backgroundPreloadActive = false;
+                console.log("Background preload paused for user interaction.");
+            }
+
+            function initLazyObserver(viewer) {
+                if (observer) observer.disconnect();
+
+                observer = new IntersectionObserver((entries) => {
+                    entries.forEach(entry => {
+                        if (entry.isIntersecting) {
+                            const slide = entry.target;
+                            const imgs = slide.querySelectorAll('img[data-lazy-src]');
+                            imgs.forEach(img => {
+                                img.src = img.dataset.lazySrc;
+                                img.removeAttribute('data-lazy-src');
+                            });
+                            observer.unobserve(slide);
+                        }
+                    });
+                }, {
+                    root: viewer,
+                    rootMargin: '100% 0px' // Preload 1 screen ahead
+                });
+            }
+
+            // 3. 左右翻頁圖片瀏覽器 (Lazy Load Version)
             function openBook(folder, count, ext = 'webp', mode = 'single') {
+                stopBackgroundPreload(); // Stop background tasks immediately
+
                 // Reset state: Hide back button by default
                 document.querySelector('.back-book').style.display = 'none';
 
                 const viewer = document.getElementById('image-viewer');
                 viewer.innerHTML = '';
 
+                // Initialize Lazy Observer
+                initLazyObserver(viewer);
+
+                // Helper to create lazy image
+                const createLazyImg = (f, i, e, eager = false) => {
+                    const img = document.createElement('img');
+                    img.decoding = 'sync';
+                    img.dataset.fallbackStage = '0';
+                    const src = `${f}/${i}.${e}`;
+
+                    img.onerror = function () {
+                        // Fallback logic (WebP -> JPG -> PNG)
+                        if (e === 'webp' && img.dataset.fallbackStage === '0') {
+                            img.dataset.fallbackStage = '1';
+                            img.src = `${f}/${i}.jpg`;
+                            return;
+                        }
+                        if (e === 'webp' && img.dataset.fallbackStage === '1') {
+                            img.dataset.fallbackStage = '2';
+                            img.src = `${f}/${i}.png`;
+                            return;
+                        }
+                    };
+
+                    if (eager) {
+                        img.loading = 'eager';
+                        img.src = src;
+                    } else {
+                        img.dataset.lazySrc = src;
+                        // Placeholder or transparent pixel could go here if needed to hold space, 
+                        // but CSS sizing usually handles it if aspect ratio is known.
+                        // Here we rely on the container sizing.
+                        // To prevent collapse, we might need a placeholder src or style.
+                        // For now, let's just leave src empty, but style it.
+                        img.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7'; // Transparent 1x1
+                    }
+                    return img;
+                };
+
                 if (mode === 'spread') {
                     viewer.classList.add('spread-mode');
                     viewer.classList.remove('vertical-mode');
 
-                    // 1. Load cover page immediately
+                    // 1. Cover (Always Eager)
                     const coverSlide = document.createElement('div');
                     coverSlide.className = 'img-slide';
                     const wrapper = document.createElement('div');
                     wrapper.className = 'zoom-wrapper';
-                    wrapper.appendChild(createImgElement(folder, 1, ext));
+                    wrapper.appendChild(createLazyImg(folder, 1, ext, true));
                     coverSlide.appendChild(wrapper);
                     viewer.appendChild(coverSlide);
 
-                    const loadSpreads = (start, end) => {
-                        for (let i = start; i <= end; i += 2) {
-                            const slide = document.createElement('div');
-                            slide.className = 'img-slide';
-                            const w = document.createElement('div');
-                            w.className = 'zoom-wrapper';
-                            w.appendChild(createImgElement(folder, i, ext));
-                            if (i + 1 <= count) w.appendChild(createImgElement(folder, i + 1, ext));
-                            slide.appendChild(w);
-                            viewer.appendChild(slide);
-                        }
-                    };
+                    // 2. Rest (Lazy)
+                    // Load first spread (pg 2-3) eager as well for smoothness
+                    for (let i = 2; i <= count; i += 2) {
+                        const slide = document.createElement('div');
+                        slide.className = 'img-slide';
+                        const w = document.createElement('div');
+                        w.className = 'zoom-wrapper';
 
-                    // 2. Load first few spreads (up to page 5-7) immediately
-                    const initialTotal = Math.min(5, count);
-                    loadSpreads(2, initialTotal);
+                        const isNearStart = i <= 4; // Preload pg 2,3,4,5
+                        w.appendChild(createLazyImg(folder, i, ext, isNearStart));
+                        if (i + 1 <= count) w.appendChild(createLazyImg(folder, i + 1, ext, isNearStart));
 
-                    // 3. Load remaining spreads after a tiny delay
-                    if (count > initialTotal) {
-                        setTimeout(() => loadSpreads(initialTotal + 1, count), 150);
+                        slide.appendChild(w);
+                        viewer.appendChild(slide);
+
+                        if (!isNearStart) observer.observe(slide);
                     }
+
                 } else if (mode === 'vertical') {
                     viewer.classList.remove('spread-mode');
                     viewer.classList.add('vertical-mode');
@@ -1575,33 +1643,34 @@
                     const wrapper = document.createElement('div');
                     wrapper.className = 'zoom-wrapper';
 
+                    // Vertical mode is a single long scroll, logic differs slightly.
+                    // Observer should watch individual images or blocks.
+                    // Simplification: For vertical (Design), it's usually just 2 images. Load all.
+                    // If vertical gets long, we need wrapper intersection.
                     for (let i = 1; i <= count; i++) {
-                        wrapper.appendChild(createImgElement(folder, i, ext));
+                        wrapper.appendChild(createLazyImg(folder, i, ext, true));
                     }
                     slide.appendChild(wrapper);
                     viewer.appendChild(slide);
 
                 } else {
+                    // Single Mode
                     viewer.classList.remove('spread-mode');
                     viewer.classList.remove('vertical-mode');
 
-                    const loadSingle = (start, end) => {
-                        for (let i = start; i <= end; i++) {
-                            const slide = document.createElement('div');
-                            slide.className = 'img-slide';
-                            const w = document.createElement('div');
-                            w.className = 'zoom-wrapper';
-                            w.appendChild(createImgElement(folder, i, ext));
-                            slide.appendChild(w);
-                            viewer.appendChild(slide);
-                        }
-                    };
+                    for (let i = 1; i <= count; i++) {
+                        const slide = document.createElement('div');
+                        slide.className = 'img-slide';
+                        const w = document.createElement('div');
+                        w.className = 'zoom-wrapper';
 
-                    // Load first 5 pages, then rest
-                    const initial = Math.min(5, count);
-                    loadSingle(1, initial);
-                    if (count > initial) {
-                        setTimeout(() => loadSingle(initial + 1, count), 150);
+                        const isNearStart = i <= 3; // First 3 pages eager
+                        w.appendChild(createLazyImg(folder, i, ext, isNearStart));
+                        slide.appendChild(w);
+
+                        viewer.appendChild(slide);
+
+                        if (!isNearStart) observer.observe(slide);
                     }
                 }
 
@@ -1609,7 +1678,7 @@
                 const arrows = document.querySelectorAll('.nav-arrow');
                 arrows.forEach(el => el.style.display = (mode === 'vertical') ? 'none' : 'block');
 
-                initZoomLogic(); // Enable zoom for all modes
+                initZoomLogic(); // Enable zoom
                 const overlay = document.getElementById('book-overlay');
                 overlay.style.display = 'block';
                 setTimeout(() => overlay.classList.add('active'), 10);
@@ -1783,6 +1852,8 @@
             let currentGalleryCount = 0;
 
             function openGalleryViewer(folder, count) {
+                stopBackgroundPreload(); // Stop background tasks
+
                 const overlay = document.getElementById('gallery-overlay');
                 const spinner = document.getElementById('gallery-spinner');
                 spinner.innerHTML = '';
@@ -2728,6 +2799,10 @@
 
                 // Simple sequential loader
                 const loadNext = () => {
+                    if (!backgroundPreloadActive) {
+                        console.log("Background preload stopped.");
+                        return;
+                    }
                     if (loaded >= total) {
                         console.log("Background preload complete.");
                         return;
@@ -2737,7 +2812,7 @@
                     img.onload = img.onerror = () => {
                         loaded++;
                         // Small delay to yield to main thread
-                        setTimeout(loadNext, 20);
+                        setTimeout(loadNext, 50); // Increased delay to 50ms for better responsiveness
                     };
                 };
 
