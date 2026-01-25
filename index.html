@@ -708,27 +708,6 @@
             overflow: hidden;
         }
 
-        .grad-item:hover {
-            transform: translateY(-10px);
-            border-color: rgba(255, 255, 255, 0.8);
-        }
-
-        .item-book:hover {
-            background: url('midle.webp') center/cover no-repeat;
-        }
-
-        .item-model:hover {
-            background: url('modelmenu.webp') center/cover no-repeat;
-        }
-
-        .item-proposal:hover {
-            background: url('proposal.webp') center/cover no-repeat;
-        }
-
-        .item-design:hover {
-            background: url('designmenu.jpg') center/cover no-repeat;
-        }
-
         .grad-item h4 {
             font-family: "Helvetica Neue", sans-serif;
             font-size: 1.2vw;
@@ -740,10 +719,34 @@
             line-height: 1.5;
         }
 
-        .grad-item:hover h4 {
-            color: #fff;
-            font-weight: 500;
-            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.8);
+        /* Fix: Only enable hover effects on devices that support hover (Mouse) */
+        @media (hover: hover) {
+            .grad-item:hover {
+                transform: translateY(-10px);
+                border-color: rgba(255, 255, 255, 0.8);
+            }
+
+            .item-book:hover {
+                background: url('midle.webp') center/cover no-repeat;
+            }
+
+            .item-model:hover {
+                background: url('modelmenu.webp') center/cover no-repeat;
+            }
+
+            .item-proposal:hover {
+                background: url('proposal.webp') center/cover no-repeat;
+            }
+
+            .item-design:hover {
+                background: url('designmenu.jpg') center/cover no-repeat;
+            }
+
+            .grad-item:hover h4 {
+                color: #fff;
+                font-weight: 500;
+                text-shadow: 0 2px 10px rgba(0, 0, 0, 0.8);
+            }
         }
 
         .grad-close {
