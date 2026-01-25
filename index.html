@@ -1524,15 +1524,22 @@
                 }, 300);
             }
 
+<<<<<<< HEAD
             // --- Active Memory Manager (Virtualization) ---
             let backgroundPreloadActive = true;
             let memManagerInterval = null;
+=======
+            // --- Lazy Loading & Preload Control ---
+            let backgroundPreloadActive = true;
+            let observer = null;
+>>>>>>> 7dffca2837668d7efed477a22e06b6fc26428efa
 
             function stopBackgroundPreload() {
                 backgroundPreloadActive = false;
                 console.log("Background preload paused for user interaction.");
             }
 
+<<<<<<< HEAD
             // Aggressive memory release
             function initMemoryManager(viewer) {
                 if (memManagerInterval) clearInterval(memManagerInterval);
@@ -1590,18 +1597,55 @@
             // 3. 左右翻頁圖片瀏覽器 (Virtual Memory Version)
             function openBook(folder, count, ext = 'webp', mode = 'single') {
                 stopBackgroundPreload();
+=======
+            function initLazyObserver(viewer) {
+                if (observer) observer.disconnect();
+
+                observer = new IntersectionObserver((entries) => {
+                    entries.forEach(entry => {
+                        if (entry.isIntersecting) {
+                            const slide = entry.target;
+                            const imgs = slide.querySelectorAll('img[data-lazy-src]');
+                            imgs.forEach(img => {
+                                img.src = img.dataset.lazySrc;
+                                img.removeAttribute('data-lazy-src');
+                            });
+                            observer.unobserve(slide);
+                        }
+                    });
+                }, {
+                    root: viewer,
+                    rootMargin: '100% 0px' // Preload 1 screen ahead
+                });
+            }
+
+            // 3. 左右翻頁圖片瀏覽器 (Lazy Load Version)
+            function openBook(folder, count, ext = 'webp', mode = 'single') {
+                stopBackgroundPreload(); // Stop background tasks immediately
+
+                // Reset state: Hide back button by default
+>>>>>>> 7dffca2837668d7efed477a22e06b6fc26428efa
                 document.querySelector('.back-book').style.display = 'none';
 
                 const viewer = document.getElementById('image-viewer');
                 viewer.innerHTML = '';
 
+<<<<<<< HEAD
                 // Helper: Create image with persistent data-lazy-src
                 const createVirtualImg = (f, i, e) => {
+=======
+                // Initialize Lazy Observer
+                initLazyObserver(viewer);
+
+                // Helper to create lazy image
+                const createLazyImg = (f, i, e, eager = false) => {
+>>>>>>> 7dffca2837668d7efed477a22e06b6fc26428efa
                     const img = document.createElement('img');
                     img.decoding = 'sync';
                     img.dataset.fallbackStage = '0';
                     const src = `${f}/${i}.${e}`;
 
+<<<<<<< HEAD
                     img.dataset.lazySrc = src;
                     // Initial state: EMPTY. Let memory manager load it if visible.
 
@@ -1612,16 +1656,43 @@
                             const newSrc = `${f}/${i}.jpg`;
                             img.dataset.lazySrc = newSrc; // Update source of truth
                             img.src = newSrc;
+=======
+                    img.onerror = function () {
+                        // Fallback logic (WebP -> JPG -> PNG)
+                        if (e === 'webp' && img.dataset.fallbackStage === '0') {
+                            img.dataset.fallbackStage = '1';
+                            img.src = `${f}/${i}.jpg`;
+>>>>>>> 7dffca2837668d7efed477a22e06b6fc26428efa
                             return;
                         }
                         if (e === 'webp' && img.dataset.fallbackStage === '1') {
                             img.dataset.fallbackStage = '2';
+<<<<<<< HEAD
                             const newSrc = `${f}/${i}.png`;
                             img.dataset.lazySrc = newSrc;
                             img.src = newSrc;
                             return;
                         }
                     };
+=======
+                            img.src = `${f}/${i}.png`;
+                            return;
+                        }
+                    };
+
+                    if (eager) {
+                        img.loading = 'eager';
+                        img.src = src;
+                    } else {
+                        img.dataset.lazySrc = src;
+                        // Placeholder or transparent pixel could go here if needed to hold space, 
+                        // but CSS sizing usually handles it if aspect ratio is known.
+                        // Here we rely on the container sizing.
+                        // To prevent collapse, we might need a placeholder src or style.
+                        // For now, let's just leave src empty, but style it.
+                        img.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7'; // Transparent 1x1
+                    }
+>>>>>>> 7dffca2837668d7efed477a22e06b6fc26428efa
                     return img;
                 };
 
@@ -1629,27 +1700,51 @@
                     viewer.classList.add('spread-mode');
                     viewer.classList.remove('vertical-mode');
 
+<<<<<<< HEAD
                     // 1. Cover
+=======
+                    // 1. Cover (Always Eager)
+>>>>>>> 7dffca2837668d7efed477a22e06b6fc26428efa
                     const coverSlide = document.createElement('div');
                     coverSlide.className = 'img-slide';
                     const wrapper = document.createElement('div');
                     wrapper.className = 'zoom-wrapper';
+<<<<<<< HEAD
                     wrapper.appendChild(createVirtualImg(folder, 1, ext));
                     coverSlide.appendChild(wrapper);
                     viewer.appendChild(coverSlide);
 
                     // 2. Spreads
+=======
+                    wrapper.appendChild(createLazyImg(folder, 1, ext, true));
+                    coverSlide.appendChild(wrapper);
+                    viewer.appendChild(coverSlide);
+
+                    // 2. Rest (Lazy)
+                    // Load first spread (pg 2-3) eager as well for smoothness
+>>>>>>> 7dffca2837668d7efed477a22e06b6fc26428efa
                     for (let i = 2; i <= count; i += 2) {
                         const slide = document.createElement('div');
                         slide.className = 'img-slide';
                         const w = document.createElement('div');
                         w.className = 'zoom-wrapper';
 
+<<<<<<< HEAD
                         w.appendChild(createVirtualImg(folder, i, ext));
                         if (i + 1 <= count) w.appendChild(createVirtualImg(folder, i + 1, ext));
 
                         slide.appendChild(w);
                         viewer.appendChild(slide);
+=======
+                        const isNearStart = i <= 4; // Preload pg 2,3,4,5
+                        w.appendChild(createLazyImg(folder, i, ext, isNearStart));
+                        if (i + 1 <= count) w.appendChild(createLazyImg(folder, i + 1, ext, isNearStart));
+
+                        slide.appendChild(w);
+                        viewer.appendChild(slide);
+
+                        if (!isNearStart) observer.observe(slide);
+>>>>>>> 7dffca2837668d7efed477a22e06b6fc26428efa
                     }
 
                 } else if (mode === 'vertical') {
@@ -1661,11 +1756,20 @@
                     const wrapper = document.createElement('div');
                     wrapper.className = 'zoom-wrapper';
 
+<<<<<<< HEAD
                     // Load all for vertical (small count assumption)
                     for (let i = 1; i <= count; i++) {
                         const img = createVirtualImg(folder, i, ext);
                         img.src = img.dataset.lazySrc;
                         wrapper.appendChild(img);
+=======
+                    // Vertical mode is a single long scroll, logic differs slightly.
+                    // Observer should watch individual images or blocks.
+                    // Simplification: For vertical (Design), it's usually just 2 images. Load all.
+                    // If vertical gets long, we need wrapper intersection.
+                    for (let i = 1; i <= count; i++) {
+                        wrapper.appendChild(createLazyImg(folder, i, ext, true));
+>>>>>>> 7dffca2837668d7efed477a22e06b6fc26428efa
                     }
                     slide.appendChild(wrapper);
                     viewer.appendChild(slide);
@@ -1680,9 +1784,20 @@
                         slide.className = 'img-slide';
                         const w = document.createElement('div');
                         w.className = 'zoom-wrapper';
+<<<<<<< HEAD
                         w.appendChild(createVirtualImg(folder, i, ext));
                         slide.appendChild(w);
                         viewer.appendChild(slide);
+=======
+
+                        const isNearStart = i <= 3; // First 3 pages eager
+                        w.appendChild(createLazyImg(folder, i, ext, isNearStart));
+                        slide.appendChild(w);
+
+                        viewer.appendChild(slide);
+
+                        if (!isNearStart) observer.observe(slide);
+>>>>>>> 7dffca2837668d7efed477a22e06b6fc26428efa
                     }
                 }
 
@@ -1690,6 +1805,7 @@
                 const arrows = document.querySelectorAll('.nav-arrow');
                 arrows.forEach(el => el.style.display = (mode === 'vertical') ? 'none' : 'block');
 
+<<<<<<< HEAD
                 initZoomLogic();
 
                 // Initialize Memory Manager (Only for horizontal scrollers)
@@ -1697,6 +1813,9 @@
                     initMemoryManager(viewer);
                 }
 
+=======
+                initZoomLogic(); // Enable zoom
+>>>>>>> 7dffca2837668d7efed477a22e06b6fc26428efa
                 const overlay = document.getElementById('book-overlay');
                 overlay.style.display = 'block';
                 setTimeout(() => overlay.classList.add('active'), 10);
