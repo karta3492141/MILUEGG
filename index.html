@@ -619,10 +619,13 @@
                 /* Start padding */
                 padding-right: 5vw;
                 /* End padding */
-                height: 35vh;
-                /* Reduce height slightly to see more context */
+                height: 75vh;
+                /* Increased height for 1-page mode */
                 margin-bottom: 5vh;
                 /* Gap between top and bottom strip */
+
+                scroll-snap-type: x mandatory;
+                /* Snap to pages */
 
                 /* Keep scrollbar hidden for cleaner look, but functionality remains */
                 -ms-overflow-style: none;
@@ -642,23 +645,25 @@
             }
 
             .composite-item {
-                flex: 0 0 auto !important;
-                /* Don't grow, respect content size */
-                width: auto !important;
-                /* Auto width based on image ratio */
+                flex: 0 0 100vw !important;
+                /* Force full viewport width (1 image 1 page) */
+                width: 100vw !important;
                 height: 100%;
-                /* Match row height */
+                scroll-snap-align: start;
+                /* Align to start of screen */
+                display: flex;
+                justify-content: center;
+                align-items: center;
             }
 
             .composite-item img {
-                width: auto !important;
-                /* Let width flow naturally */
+                width: 100% !important;
                 max-width: none !important;
-                /* CRITICAL: Prevent squashing/cropping */
                 height: 100%;
-                /* Fill row height */
                 object-fit: contain;
-                /* Ensure full image is visible, no cropping */
+                /* Ensure whole image is visible */
+                padding: 0 10px;
+                /* Slight padding to prevent edge touching */
             }
         }
 
