@@ -2465,7 +2465,12 @@
                     lightboxDrag.hasMoved = false; // track if user actually drags (so click won't toggle zoom)
                     lightboxDrag.startX = e.clientX - lightboxState.x;
                     lightboxDrag.startY = e.clientY - lightboxState.y;
+
                     img.style.cursor = 'grabbing';
+
+                    // PERF FIX: Disable transition for instant drag response
+                    img.style.transition = 'none';
+                    img.style.willChange = 'transform';
                 };
 
                 window.addEventListener('mousemove', (e) => {
@@ -2479,14 +2484,22 @@
                     }
                     lightboxState.x = newX;
                     lightboxState.y = newY;
-                    updateTransform();
+
+                    requestAnimationFrame(() => updateTransform());
                 });
 
                 window.addEventListener('mouseup', (e) => {
                     if (lightboxDrag.isDragging) {
                         lightboxDrag.isDragging = false;
                         const imgEl = document.getElementById('lightbox-img');
-                        if (imgEl) imgEl.style.cursor = 'default'; // cursor handling
+                        if (imgEl) {
+                            imgEl.style.cursor = 'default';
+                            // Restore CSS transition
+                            imgEl.style.transition = '';
+
+                            // Cleanup optimization
+                            setTimeout(() => { imgEl.style.willChange = 'auto'; }, 100);
+                        }
                         // short timeout to allow click event to check moved flag
                         setTimeout(() => { lightboxDrag.hasMoved = false; }, 50);
                     }
