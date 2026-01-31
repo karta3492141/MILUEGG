@@ -2451,6 +2451,7 @@
             let lightboxState = { scale: 1, x: 0, y: 0 };
             let lightboxDrag = { startX: 0, startY: 0, isDragging: false };
             let pinchStart = { dist: 0, scale: 1 };
+            let lightboxFitScale = 1; // Logic: Scale down the high-res image to fit screen
 
             function initLightboxZoom() {
                 const img = document.getElementById('lightbox-img');
@@ -2657,12 +2658,7 @@
             }
 
             // --- Advanced Zoom & Pan Logic for Lightbox ---
-            let lightboxState = { scale: 1, x: 0, y: 0 };
-            let lightboxDrag = { startX: 0, startY: 0, isDragging: false };
-            let pinchStart = { dist: 0, scale: 1 };
-            let lightboxFitScale = 1; // Logic: Scale down the high-res image to fit screen
 
-            // ... (keep initLightboxZoom) ...
 
             function updateTransform() {
                 const img = document.getElementById('lightbox-img');
