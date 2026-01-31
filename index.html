@@ -616,8 +616,8 @@
                 justify-content: flex-start;
                 padding-left: 0;
                 padding-right: 0;
-                height: 100vw;
-                /* Square Height: Matches the width-limited height of square images */
+                height: 85vh;
+                /* Increased to push the next row down (Page Separation) */
                 margin-bottom: 5vh;
 
                 scroll-snap-type: x mandatory;
@@ -654,7 +654,10 @@
             .composite-item img {
                 width: 100% !important;
                 max-width: 100% !important;
-                height: 100% !important;
+                height: auto !important;
+                /* Allow height to adjust naturally */
+                max-height: 100vw !important;
+                /* CRITICAL: Limit height to Square size (100vw) */
                 object-fit: contain;
                 padding: 0;
             }
