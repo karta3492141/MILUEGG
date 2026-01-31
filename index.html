@@ -610,757 +610,806 @@
             }
 
             .composite-row {
-                position: fixed;
-                top: 40px;
-                left: 40px;
-                font-size: 0.9vw;
+                max-width: 100vw;
+                flex-wrap: nowrap;
+                overflow-x: auto;
+                justify-content: flex-start;
+                padding-left: 0;
+                padding-right: 0;
+                height: 70vh;
+                margin-bottom: 5vh;
+
+                scroll-snap-type: x mandatory;
+                scroll-behavior: smooth;
+
+                /* Hide scrollbar */
+                -ms-overflow-style: none;
+                scrollbar-width: none;
+
+                -webkit-overflow-scrolling: touch;
+            }
+
+            .composite-row::-webkit-scrollbar {
+                display: none;
+            }
+
+            .composite-row+.composite-row {
+                margin-top: 0;
+            }
+
+            .composite-item {
+                flex: 0 0 100vw !important;
+                width: 100vw !important;
+                height: 100%;
+                scroll-snap-align: center;
+                scroll-snap-stop: always;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                margin: 0;
+                padding: 0;
+            }
+
+            .composite-item img {
+                width: 100% !important;
+                max-width: 100% !important;
+                height: 100% !important;
+                object-fit: contain;
+                padding: 0;
+            }
+        }
+
+        .back-book {
+            position: fixed;
+            top: 40px;
+            left: 40px;
+            font-size: 0.9vw;
+            color: #fff;
+            cursor: pointer;
+            z-index: 4001;
+            letter-spacing: 2px;
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            padding: 10px 20px;
+            background: rgba(0, 0, 0, 0.5);
+            transition: 0.3s;
+            display: none;
+        }
+
+        .back-book:hover {
+            background: #fff;
+            color: #000;
+        }
+
+        .nav-arrow {
+            position: fixed;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(255, 255, 255, 0.05);
+            color: white;
+            padding: 1.3vw 0.8vw;
+            cursor: pointer;
+            font-size: 1.5vw;
+            z-index: 5500;
+            transition: 0.3s;
+            border-radius: 4px;
+            user-select: none;
+        }
+
+        .nav-arrow:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .prev-arrow {
+            left: 2%;
+        }
+
+        .next-arrow {
+            right: 2%;
+        }
+
+        .close-book,
+        .close-btn {
+            position: fixed;
+            top: 3vw;
+            /* Default for desktop */
+            right: 5%;
+            color: #fff;
+            cursor: pointer;
+            letter-spacing: 0.2vw;
+            /* Ensure readable size on all devices: min 14px */
+            font-size: clamp(14px, 0.7vw, 16px);
+            z-index: 6000;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 0.5vw 1vw;
+            border-radius: 4px;
+            font-family: sans-serif;
+            /* Setup safe font for 'X' icon */
+        }
+
+        /* --- 加載器 (Loader) --- */
+        #loader {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #0e0e0e;
+            z-index: 2147483647;
+            /* Ensure it's above everything */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: opacity 0.8s ease;
+        }
+
+        .loader-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .building-svg {
+            width: 150px;
+            margin-bottom: 20px;
+        }
+
+        .loading-text {
+            font-family: "ARP", sans-serif;
+            letter-spacing: 5px;
+            font-size: 10px;
+            color: #555;
+        }
+
+        #percent {
+            color: #fff;
+        }
+
+        #arch-line {
+            stroke-dasharray: 320;
+            stroke-dashoffset: 320;
+        }
+
+        /* --- 關於我 --- */
+        #about-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #0a0a0a;
+            z-index: 3000;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            overflow-y: auto;
+        }
+
+        .about-content {
+            width: 90%;
+            max-width: 80vw;
+            display: flex;
+            align-items: flex-start;
+            /* 80px -> 4.2vw */
+            gap: 4.2vw;
+            padding: 10vh 0;
+        }
+
+        .about-photo {
+            flex: 0.7;
+            width: 25vw;
+            aspect-ratio: 3/4;
+            background: #151515;
+            overflow: hidden;
+            position: sticky;
+            top: 10vh;
+        }
+
+        .about-photo img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .about-text {
+            flex: 1.3;
+            display: flex;
+            flex-direction: column;
+            text-align: left;
+        }
+
+        .about-header {
+            margin-bottom: 2vw;
+            border-bottom: 1px solid #333;
+            padding-bottom: 1.3vw;
+        }
+
+        .about-header h2 {
+            /* 2.8rem (~45px) -> 2.35vw */
+            font-size: 2.35vw;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        .about-header h2 span {
+            /* 1.3rem (~21px) -> 1.1vw */
+            font-size: 1.1vw;
+            color: #888;
+            font-weight: 300;
+            margin-left: 0.8vw;
+            display: inline-block;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1.5vw;
+        }
+
+        .info-item h4 {
+            /* 1.1rem (~17.6px) -> 0.92vw */
+            font-size: 0.95vw;
+            color: #bdcde6;
+            letter-spacing: 0.3vw;
+            margin-bottom: 0.5vw;
+            font-weight: 600;
+            border-left: 3px solid #bdcde6;
+            padding-left: 0.8vw;
+        }
+
+        .info-item p,
+        .info-item li {
+            /* 0.95rem (~15.2px) -> 0.8vw */
+            font-size: 0.8vw;
+            color: #ccc;
+            list-style: none;
+            font-weight: 300;
+            line-height: 1.8;
+        }
+
+        .info-item ul li {
+            margin-bottom: 0.4vw;
+            position: relative;
+            padding-left: 1.2vw;
+        }
+
+        .info-item ul li::before {
+            content: "○";
+            position: absolute;
+            left: 0;
+            color: #555;
+        }
+
+        /* --- Graduation Menu Global Styles --- */
+        #grad-menu {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            /* Background removed; handled by slider */
+            background: #000;
+            z-index: 2147483647 !important;
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            transition: opacity 0.4s ease;
+        }
+
+        .grad-bg-slider {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -2;
+            pointer-events: none;
+        }
+
+        .grad-bg-slide {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            opacity: 0;
+            transition: opacity 1.5s ease-in-out;
+            image-orientation: from-image;
+        }
+
+        .grad-bg-slide.active {
+            opacity: 1;
+        }
+
+        .grad-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            /* Dark overlay for text readability */
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        #grad-menu.active {
+            opacity: 1;
+        }
+
+        .grad-title {
+            font-family: "ARP", sans-serif;
+            font-size: 3vw;
+            color: #fff;
+            margin-bottom: 5vh;
+            letter-spacing: 5px;
+        }
+
+        .grad-options {
+            display: flex;
+            gap: 2vw;
+            width: 80%;
+            justify-content: center;
+        }
+
+        .grad-item {
+            flex: 1;
+            height: 40vh;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: 0.3s;
+            background: rgba(255, 255, 255, 0.02);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .grad-item h4 {
+            font-family: "Helvetica Neue", sans-serif;
+            font-size: 1.2vw;
+            font-weight: 300;
+            letter-spacing: 2px;
+            color: #fff;
+            transition: 0.3s;
+            text-align: center;
+            line-height: 1.5;
+        }
+
+        /* Fix: Only enable hover effects on devices that support hover (Mouse) */
+        @media (hover: hover) {
+            .grad-item:hover {
+                transform: translateY(-10px);
+                border-color: rgba(255, 255, 255, 0.8);
+            }
+
+            .item-book:hover {
+                background: url('midle.webp') center/cover no-repeat;
+            }
+
+            .item-model:hover {
+                background: url('modelmenu.webp') center/cover no-repeat;
+            }
+
+            .item-proposal:hover {
+                background: url('proposal.webp') center/cover no-repeat;
+            }
+
+            .item-design:hover {
+                background: url('designmenu.jpg') center/cover no-repeat;
+            }
+
+            .grad-item:hover h4 {
                 color: #fff;
-                cursor: pointer;
-                z-index: 4001;
+                font-weight: 500;
+                text-shadow: 0 2px 10px rgba(0, 0, 0, 0.8);
+            }
+        }
+
+        .grad-close {
+            position: absolute;
+            top: 40px;
+            right: 5%;
+            color: #777;
+            cursor: pointer;
+            font-size: 0.9vw;
+            letter-spacing: 2px;
+            transition: 0.3s;
+        }
+
+        .grad-close:hover {
+            color: #fff;
+        }
+
+        /* --- 3D 旋轉畫廊 (3D Rotating Gallery) --- */
+        #gallery-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #000;
+            display: none;
+            z-index: 4000;
+            opacity: 0;
+            transition: opacity 0.8s ease;
+            perspective: 1000px;
+            /* Enable 3D Space */
+            overflow: hidden;
+            pointer-events: auto;
+            /* Catch drags */
+        }
+
+        /* ... skipped ... */
+
+        .gallery-item {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            -webkit-box-reflect: below 10px linear-gradient(transparent 60%, rgba(0, 0, 0, 0.4));
+            cursor: pointer;
+            transition: 0.3s;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            background: #000;
+            pointer-events: auto;
+            will-change: transform;
+        }
+
+        @media (max-width: 768px) {
+            .gallery-item {
+                -webkit-box-reflect: none;
+                /* Disable expensive reflection on mobile */
+            }
+        }
+
+        #gallery-overlay.active {
+            opacity: 1;
+        }
+
+        #gallery-stage {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transform-style: preserve-3d;
+            touch-action: none;
+            /* Critical for mobile drag */
+            pointer-events: none;
+            /* Let clicks pass through to items behind Z=0 */
+        }
+
+        #gallery-spinner {
+            position: relative;
+            width: 250px;
+            height: 350px;
+            transform-style: preserve-3d;
+            transition: transform 0.1s ease-out;
+            pointer-events: none;
+            will-change: transform;
+        }
+
+        /* 為了讓旋轉更順滑, 滑動結束後加慣性動畫 */
+        #gallery-spinner.inertia {
+            transition: transform 1s cubic-bezier(0.2, 0, 0.2, 1);
+        }
+
+
+
+        .gallery-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        .gallery-item:hover {
+            border-color: #fff;
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
+        }
+
+        /* --- Lightbox Styles (Restored & Enhanced) --- */
+        #collage-lightbox {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            display: none;
+            z-index: 5000;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            transition: opacity 0.4s ease;
+            /* Allow click-through to close on background */
+            cursor: pointer;
+        }
+
+        #collage-lightbox.active {
+            opacity: 1;
+        }
+
+        #collage-lightbox img {
+            max-width: 90%;
+            max-height: 90%;
+            object-fit: contain;
+            box-shadow: 0 0 50px rgba(0, 0, 0, 0.8);
+            transform: scale(0.9);
+            transition: transform 0.4s cubic-bezier(0.2, 0, 0.2, 1);
+            cursor: zoom-in;
+            /* Indicate zoomable */
+        }
+
+        #collage-lightbox.active img {
+            transform: scale(1);
+        }
+
+        /* Zoomed State */
+        #collage-lightbox img.zoomed {
+            transform: scale(1.8) !important;
+            max-width: none !important;
+            max-height: none !important;
+            cursor: zoom-out !important;
+            /* Ensure it covers screen if needed */
+            min-width: 50vw;
+        }
+
+        /* Mobile Adjustments for Gallery */
+        @media (max-width: 768px) {
+            #gallery-spinner {
+                width: 160px;
+                height: 220px;
+            }
+        }
+
+        /* Correctly re-wrap all these mobile overrides */
+        @media (max-width: 768px) {
+            body {
+                font-size: 3vw;
+            }
+
+            nav {
+                padding: 30px 5%;
+            }
+
+            .nav-link {
+                font-size: 14px;
                 letter-spacing: 2px;
-                border: 1px solid rgba(255, 255, 255, 0.5);
-                padding: 10px 20px;
-                background: rgba(0, 0, 0, 0.5);
-                transition: 0.3s;
-                display: none;
-                /* Hidden by default */
             }
 
-            .back-book:hover {
-                background: #fff;
-                color: #000;
-            }
-
-            .nav-arrow {
-                position: fixed;
-                top: 50%;
-                transform: translateY(-50%);
-                background: rgba(255, 255, 255, 0.05);
-                color: white;
-                padding: 1.3vw 0.8vw;
-                cursor: pointer;
-                font-size: 1.5vw;
-                z-index: 5500;
-                transition: 0.3s;
-                border-radius: 4px;
-                user-select: none;
-            }
-
-            .nav-arrow:hover {
-                background: rgba(255, 255, 255, 0.2);
-            }
-
-            .prev-arrow {
-                left: 2%;
-            }
-
-            .next-arrow {
-                right: 2%;
-            }
-
-            .close-book,
+            /* Restore About Me Close Button to normal */
             .close-btn {
-                position: fixed;
-                top: 3vw;
-                /* Default for desktop */
-                right: 5%;
-                color: #fff;
-                cursor: pointer;
-                letter-spacing: 0.2vw;
-                /* Ensure readable size on all devices: min 14px */
-                font-size: clamp(14px, 0.7vw, 16px);
-                z-index: 6000;
-                background: rgba(255, 255, 255, 0.1);
-                padding: 0.5vw 1vw;
-                border-radius: 4px;
-                font-family: sans-serif;
-                /* Setup safe font for 'X' icon */
+                font-size: 12px !important;
+                /* Smaller text */
+                padding: 5px 10px !important;
+                /* Minimal padding */
+                top: 20px !important;
+                background: transparent !important;
+                border: none !important;
+                z-index: 6000 !important;
             }
 
-            /* --- 加載器 (Loader) --- */
-            #loader {
-                position: fixed;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 100%;
-                background: #0e0e0e;
-                z-index: 2147483647;
-                /* Ensure it's above everything */
-                display: flex;
-                justify-content: center;
-                align-items: center;
-                transition: opacity 0.8s ease;
+            /* Keep Portfolio Close Button visible but sized reasonably */
+            .close-book {
+                font-size: 14px !important;
+                padding: 8px 16px !important;
+                top: 20px !important;
+                background: rgba(0, 0, 0, 0.8) !important;
+                border: 1px solid white !important;
+                z-index: 2147483647 !important;
             }
 
-            .loader-content {
-                display: flex;
+            .back-book {
+                font-size: 14px !important;
+                padding: 8px 16px !important;
+                top: 20px !important;
+                left: 20px !important;
+                /* Left aligned */
+                background: rgba(0, 0, 0, 0.8) !important;
+                border: 1px solid white !important;
+                z-index: 2147483647 !important;
+            }
+
+            /* --- Graduation Menu Mobile Overrides --- */
+            /* Base styles moved to global scope */
+            .grad-title {
+                font-size: 5.5vw;
+                margin-bottom: 4vh;
+                white-space: nowrap;
+                /* Prevent wrapping */
+                letter-spacing: 3px;
+                /* Slightly reduced letter spacing */
+            }
+
+            .grad-options {
                 flex-direction: column;
-                align-items: center;
+                gap: 2vh;
+                width: 85%;
             }
 
-            .building-svg {
-                width: 150px;
-                margin-bottom: 20px;
-            }
-
-            .loading-text {
-                font-family: "ARP", sans-serif;
-                letter-spacing: 5px;
-                font-size: 10px;
-                color: #555;
-            }
-
-            #percent {
-                color: #fff;
-            }
-
-            #arch-line {
-                stroke-dasharray: 320;
-                stroke-dashoffset: 320;
-            }
-
-            /* --- 關於我 --- */
-            #about-overlay {
-                position: fixed;
-                top: 0;
-                left: 0;
+            .grad-item {
                 width: 100%;
-                height: 100%;
-                background: #0a0a0a;
-                z-index: 3000;
-                display: none;
-                justify-content: center;
-                align-items: center;
-                overflow-y: auto;
+                height: 12vh;
+                /* Compact for mobile */
+            }
+
+            .grad-item h4 {
+                font-size: 4vw;
+            }
+
+            .grad-close {
+                font-size: 14px;
+                padding: 10px 20px;
+                top: 20px;
+            }
+
+            /* Force images to be visible on mobile */
+            #image-viewer img {
+                opacity: 1 !important;
+                display: block !important;
+                min-width: 100vw !important;
+                /* Force full width */
+                height: auto !important;
+                max-height: 80vh !important;
+                object-fit: contain !important;
+            }
+
+            .hero h1 {
+                /* Reduced from 13vw to 11vw per user request */
+                font-size: 11vw;
+            }
+
+            .hero h2 {
+                /* Reduced from 3.5vw to 2.8vw */
+                font-size: 2.8vw;
+                letter-spacing: 5px;
             }
 
             .about-content {
-                width: 90%;
-                max-width: 80vw;
-                display: flex;
-                align-items: flex-start;
-                /* 80px -> 4.2vw */
-                gap: 4.2vw;
-                padding: 10vh 0;
+                flex-direction: column;
+                align-items: center;
+                /* Fit to screen height */
+                height: 100vh;
+                justify-content: flex-start;
+                /* Align to top to respect padding */
+                gap: 1.5vh;
+                /* Reduced gap to save space */
+                padding-top: 6vh;
+                /* Reduced padding from 12vh */
+                max-width: 90vw;
+                overflow: hidden;
+                /* Prevent scrolling */
             }
 
             .about-photo {
-                flex: 0.7;
-                width: 25vw;
-                aspect-ratio: 3/4;
-                background: #151515;
-                overflow: hidden;
-                position: sticky;
-                top: 10vh;
+                position: relative;
+                top: 0;
+                margin: 0;
+                /* Increased width to show full shoulders, constrained height to crop top/bottom */
+                width: 28vh;
+                height: 16vh;
+                flex-shrink: 0;
             }
 
+            /* Fix photo framing */
             .about-photo img {
-                width: 100%;
-                height: 100%;
-                object-fit: cover;
+                object-position: center 40%;
+                /* Relaxed slightly from 50% */
             }
 
             .about-text {
-                flex: 1.3;
-                display: flex;
-                flex-direction: column;
-                text-align: left;
+                /* Ensure text container fits remaining space */
+                height: auto;
+                justify-content: center;
             }
 
             .about-header {
-                margin-bottom: 2vw;
-                border-bottom: 1px solid #333;
-                padding-bottom: 1.3vw;
+                margin-bottom: 1.5vh;
+                padding-bottom: 1vh;
             }
 
             .about-header h2 {
-                /* 2.8rem (~45px) -> 2.35vw */
-                font-size: 2.35vw;
-                font-weight: 700;
-                color: #fff;
+                /* Use vh for vertical fit */
+                font-size: 3vh;
             }
 
             .about-header h2 span {
-                /* 1.3rem (~21px) -> 1.1vw */
-                font-size: 1.1vw;
-                color: #888;
-                font-weight: 300;
-                margin-left: 0.8vw;
-                display: inline-block;
+                font-size: 1.8vh;
+                margin-top: 0.5vh;
             }
 
             .info-grid {
-                display: grid;
-                grid-template-columns: 1fr;
-                gap: 1.5vw;
+                gap: 1.5vh;
             }
 
             .info-item h4 {
-                /* 1.1rem (~17.6px) -> 0.92vw */
-                font-size: 0.95vw;
-                color: #bdcde6;
-                letter-spacing: 0.3vw;
-                margin-bottom: 0.5vw;
-                font-weight: 600;
-                border-left: 3px solid #bdcde6;
-                padding-left: 0.8vw;
+                font-size: 1.8vh;
+                letter-spacing: 2px;
+                margin-bottom: 0.5vh;
             }
 
             .info-item p,
             .info-item li {
-                /* 0.95rem (~15.2px) -> 0.8vw */
-                font-size: 0.8vw;
-                color: #ccc;
-                list-style: none;
-                font-weight: 300;
-                line-height: 1.8;
+                font-size: 1.4vh;
+                line-height: 1.4;
             }
 
             .info-item ul li {
-                margin-bottom: 0.4vw;
-                position: relative;
-                padding-left: 1.2vw;
+                margin-bottom: 0.2vh;
             }
 
-            .info-item ul li::before {
-                content: "○";
-                position: absolute;
-                left: 0;
-                color: #555;
-            }
-
-            /* --- Graduation Menu Global Styles --- */
-            #grad-menu {
-                position: fixed;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 100%;
-                /* Background removed; handled by slider */
-                background: #000;
-                z-index: 2147483647 !important;
+            .nav-arrow {
                 display: none;
+            }
+
+            .project-item,
+            .project-item:nth-child(even) {
                 flex-direction: column;
-                justify-content: center;
-                align-items: center;
-                opacity: 0;
-                transition: opacity 0.4s ease;
-            }
-
-            .grad-bg-slider {
-                position: absolute;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 100%;
-                z-index: -2;
-                pointer-events: none;
-            }
-
-            .grad-bg-slide {
-                position: absolute;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 100%;
-                object-fit: cover;
-                opacity: 0;
-                transition: opacity 1.5s ease-in-out;
-                image-orientation: from-image;
-            }
-
-            .grad-bg-slide.active {
-                opacity: 1;
-            }
-
-            .grad-overlay {
-                position: absolute;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 100%;
-                background: rgba(0, 0, 0, 0.6);
-                /* Dark overlay for text readability */
-                z-index: -1;
-                pointer-events: none;
-            }
-
-            #grad-menu.active {
-                opacity: 1;
-            }
-
-            .grad-title {
-                font-family: "ARP", sans-serif;
-                font-size: 3vw;
-                color: #fff;
-                margin-bottom: 5vh;
-                letter-spacing: 5px;
-            }
-
-            .grad-options {
-                display: flex;
-                gap: 2vw;
-                width: 80%;
-                justify-content: center;
-            }
-
-            .grad-item {
-                flex: 1;
-                height: 40vh;
-                border: 1px solid rgba(255, 255, 255, 0.2);
-                display: flex;
-                justify-content: center;
-                align-items: center;
-                cursor: pointer;
-                transition: 0.3s;
-                background: rgba(255, 255, 255, 0.02);
-                position: relative;
-                overflow: hidden;
-            }
-
-            .grad-item h4 {
-                font-family: "Helvetica Neue", sans-serif;
-                font-size: 1.2vw;
-                font-weight: 300;
-                letter-spacing: 2px;
-                color: #fff;
-                transition: 0.3s;
-                text-align: center;
-                line-height: 1.5;
-            }
-
-            /* Fix: Only enable hover effects on devices that support hover (Mouse) */
-            @media (hover: hover) {
-                .grad-item:hover {
-                    transform: translateY(-10px);
-                    border-color: rgba(255, 255, 255, 0.8);
-                }
-
-                .item-book:hover {
-                    background: url('midle.webp') center/cover no-repeat;
-                }
-
-                .item-model:hover {
-                    background: url('modelmenu.webp') center/cover no-repeat;
-                }
-
-                .item-proposal:hover {
-                    background: url('proposal.webp') center/cover no-repeat;
-                }
-
-                .item-design:hover {
-                    background: url('designmenu.jpg') center/cover no-repeat;
-                }
-
-                .grad-item:hover h4 {
-                    color: #fff;
-                    font-weight: 500;
-                    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.8);
-                }
-            }
-
-            .grad-close {
-                position: absolute;
-                top: 40px;
-                right: 5%;
-                color: #777;
-                cursor: pointer;
-                font-size: 0.9vw;
-                letter-spacing: 2px;
-                transition: 0.3s;
-            }
-
-            .grad-close:hover {
-                color: #fff;
-            }
-
-            /* --- 3D 旋轉畫廊 (3D Rotating Gallery) --- */
-            #gallery-overlay {
-                position: fixed;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 100%;
-                background: #000;
-                display: none;
-                z-index: 4000;
-                opacity: 0;
-                transition: opacity 0.8s ease;
-                perspective: 1000px;
-                /* Enable 3D Space */
-                overflow: hidden;
-                pointer-events: auto;
-                /* Catch drags */
-            }
-
-            /* ... skipped ... */
-
-            .gallery-item {
-                position: absolute;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 100%;
-                backface-visibility: hidden;
-                -webkit-box-reflect: below 10px linear-gradient(transparent 60%, rgba(0, 0, 0, 0.4));
-                cursor: pointer;
-                transition: 0.3s;
-                border: 2px solid rgba(255, 255, 255, 0.1);
-                background: #000;
-                pointer-events: auto;
-                will-change: transform;
-            }
-
-            @media (max-width: 768px) {
-                .gallery-item {
-                    -webkit-box-reflect: none;
-                    /* Disable expensive reflection on mobile */
-                }
-            }
-
-            #gallery-overlay.active {
-                opacity: 1;
-            }
-
-            #gallery-stage {
-                width: 100%;
-                height: 100%;
-                display: flex;
-                justify-content: center;
-                align-items: center;
-                transform-style: preserve-3d;
-                touch-action: none;
-                /* Critical for mobile drag */
-                pointer-events: none;
-                /* Let clicks pass through to items behind Z=0 */
-            }
-
-            #gallery-spinner {
-                position: relative;
-                width: 250px;
-                height: 350px;
-                transform-style: preserve-3d;
-                transition: transform 0.1s ease-out;
-                pointer-events: none;
-                will-change: transform;
-            }
-
-            /* 為了讓旋轉更順滑, 滑動結束後加慣性動畫 */
-            #gallery-spinner.inertia {
-                transition: transform 1s cubic-bezier(0.2, 0, 0.2, 1);
-            }
-
-
-
-            .gallery-item img {
-                width: 100%;
-                height: 100%;
-                object-fit: cover;
-                display: block;
-            }
-
-            .gallery-item:hover {
-                border-color: #fff;
-                box-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
-            }
-
-            /* --- Lightbox Styles (Restored & Enhanced) --- */
-            #collage-lightbox {
-                position: fixed;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 100%;
-                background: rgba(0, 0, 0, 0.95);
-                display: none;
-                z-index: 5000;
-                justify-content: center;
-                align-items: center;
-                opacity: 0;
-                transition: opacity 0.4s ease;
-                /* Allow click-through to close on background */
-                cursor: pointer;
-            }
-
-            #collage-lightbox.active {
-                opacity: 1;
-            }
-
-            #collage-lightbox img {
-                max-width: 90%;
-                max-height: 90%;
-                object-fit: contain;
-                box-shadow: 0 0 50px rgba(0, 0, 0, 0.8);
+                height: auto;
+                min-height: auto;
+                padding: 10vh 5%;
+                gap: 4vh;
+                /* Initial state for mobile animation (match desktop feel) */
+                opacity: 0.2;
                 transform: scale(0.9);
-                transition: transform 0.4s cubic-bezier(0.2, 0, 0.2, 1);
-                cursor: zoom-in;
-                /* Indicate zoomable */
             }
 
-            #collage-lightbox.active img {
-                transform: scale(1);
+            .project-image-box {
+                height: 40vh;
+                max-height: none;
+                flex: none;
             }
 
-            /* Zoomed State */
-            #collage-lightbox img.zoomed {
-                transform: scale(1.8) !important;
-                max-width: none !important;
-                max-height: none !important;
-                cursor: zoom-out !important;
-                /* Ensure it covers screen if needed */
-                min-width: 50vw;
+            /* Critical Fix: specific disable of hover grayscale on mobile */
+            .project-image-box img {
+                filter: grayscale(0) !important;
+                /* Always colored, GSAP handles opacity */
+                transform: scale(1) !important;
+                /* Disable hover zoom effect on mobile if present */
             }
 
-            /* Mobile Adjustments for Gallery */
-            @media (max-width: 768px) {
-                #gallery-spinner {
-                    width: 160px;
-                    height: 220px;
-                }
+            .project-content {
+                flex: none;
+                width: 100%;
+                max-width: none;
+                text-align: left;
             }
 
-            /* Correctly re-wrap all these mobile overrides */
-            @media (max-width: 768px) {
-                body {
-                    font-size: 3vw;
-                }
-
-                nav {
-                    padding: 30px 5%;
-                }
-
-                .nav-link {
-                    font-size: 14px;
-                    letter-spacing: 2px;
-                }
-
-                /* Restore About Me Close Button to normal */
-                .close-btn {
-                    font-size: 12px !important;
-                    /* Smaller text */
-                    padding: 5px 10px !important;
-                    /* Minimal padding */
-                    top: 20px !important;
-                    background: transparent !important;
-                    border: none !important;
-                    z-index: 6000 !important;
-                }
-
-                /* Keep Portfolio Close Button visible but sized reasonably */
-                .close-book {
-                    font-size: 14px !important;
-                    padding: 8px 16px !important;
-                    top: 20px !important;
-                    background: rgba(0, 0, 0, 0.8) !important;
-                    border: 1px solid white !important;
-                    z-index: 2147483647 !important;
-                }
-
-                .back-book {
-                    font-size: 14px !important;
-                    padding: 8px 16px !important;
-                    top: 20px !important;
-                    left: 20px !important;
-                    /* Left aligned */
-                    background: rgba(0, 0, 0, 0.8) !important;
-                    border: 1px solid white !important;
-                    z-index: 2147483647 !important;
-                }
-
-                /* --- Graduation Menu Mobile Overrides --- */
-                /* Base styles moved to global scope */
-                .grad-title {
-                    font-size: 5.5vw;
-                    margin-bottom: 4vh;
-                    white-space: nowrap;
-                    /* Prevent wrapping */
-                    letter-spacing: 3px;
-                    /* Slightly reduced letter spacing */
-                }
-
-                .grad-options {
-                    flex-direction: column;
-                    gap: 2vh;
-                    width: 85%;
-                }
-
-                .grad-item {
-                    width: 100%;
-                    height: 12vh;
-                    /* Compact for mobile */
-                }
-
-                .grad-item h4 {
-                    font-size: 4vw;
-                }
-
-                .grad-close {
-                    font-size: 14px;
-                    padding: 10px 20px;
-                    top: 20px;
-                }
-
-                /* Force images to be visible on mobile */
-                #image-viewer img {
-                    opacity: 1 !important;
-                    display: block !important;
-                    min-width: 100vw !important;
-                    /* Force full width */
-                    height: auto !important;
-                    max-height: 80vh !important;
-                    object-fit: contain !important;
-                }
-
-                .hero h1 {
-                    /* Reduced from 13vw to 11vw per user request */
-                    font-size: 11vw;
-                }
-
-                .hero h2 {
-                    /* Reduced from 3.5vw to 2.8vw */
-                    font-size: 2.8vw;
-                    letter-spacing: 5px;
-                }
-
-                .about-content {
-                    flex-direction: column;
-                    align-items: center;
-                    /* Fit to screen height */
-                    height: 100vh;
-                    justify-content: flex-start;
-                    /* Align to top to respect padding */
-                    gap: 1.5vh;
-                    /* Reduced gap to save space */
-                    padding-top: 6vh;
-                    /* Reduced padding from 12vh */
-                    max-width: 90vw;
-                    overflow: hidden;
-                    /* Prevent scrolling */
-                }
-
-                .about-photo {
-                    position: relative;
-                    top: 0;
-                    margin: 0;
-                    /* Increased width to show full shoulders, constrained height to crop top/bottom */
-                    width: 28vh;
-                    height: 16vh;
-                    flex-shrink: 0;
-                }
-
-                /* Fix photo framing */
-                .about-photo img {
-                    object-position: center 40%;
-                    /* Relaxed slightly from 50% */
-                }
-
-                .about-text {
-                    /* Ensure text container fits remaining space */
-                    height: auto;
-                    justify-content: center;
-                }
-
-                .about-header {
-                    margin-bottom: 1.5vh;
-                    padding-bottom: 1vh;
-                }
-
-                .about-header h2 {
-                    /* Use vh for vertical fit */
-                    font-size: 3vh;
-                }
-
-                .about-header h2 span {
-                    font-size: 1.8vh;
-                    margin-top: 0.5vh;
-                }
-
-                .info-grid {
-                    gap: 1.5vh;
-                }
-
-                .info-item h4 {
-                    font-size: 1.8vh;
-                    letter-spacing: 2px;
-                    margin-bottom: 0.5vh;
-                }
-
-                .info-item p,
-                .info-item li {
-                    font-size: 1.4vh;
-                    line-height: 1.4;
-                }
-
-                .info-item ul li {
-                    margin-bottom: 0.2vh;
-                }
-
-                .nav-arrow {
-                    display: none;
-                }
-
-                .project-item,
-                .project-item:nth-child(even) {
-                    flex-direction: column;
-                    height: auto;
-                    min-height: auto;
-                    padding: 10vh 5%;
-                    gap: 4vh;
-                    /* Initial state for mobile animation (match desktop feel) */
-                    opacity: 0.2;
-                    transform: scale(0.9);
-                }
-
-                .project-image-box {
-                    height: 40vh;
-                    max-height: none;
-                    flex: none;
-                }
-
-                /* Critical Fix: specific disable of hover grayscale on mobile */
-                .project-image-box img {
-                    filter: grayscale(0) !important;
-                    /* Always colored, GSAP handles opacity */
-                    transform: scale(1) !important;
-                    /* Disable hover zoom effect on mobile if present */
-                }
-
-                .project-content {
-                    flex: none;
-                    width: 100%;
-                    max-width: none;
-                    text-align: left;
-                }
-
-                .project-content h3 {
-                    font-size: 8vw;
-                }
-
-                .project-content span {
-                    font-size: 3vw;
-                    letter-spacing: 2px;
-                }
-
-                .project-content p {
-                    font-size: 4vw;
-                }
+            .project-content h3 {
+                font-size: 8vw;
             }
 
-            footer {
-                padding: 60px 0;
-                text-align: center;
-                color: #333;
-                font-size: 0.65rem;
-                letter-spacing: 3px;
+            .project-content span {
+                font-size: 3vw;
+                letter-spacing: 2px;
             }
 
-            .svg-filters {
-                position: absolute;
-                visibility: hidden;
-                width: 0;
-                height: 0;
+            .project-content p {
+                font-size: 4vw;
             }
+        }
+
+        footer {
+            padding: 60px 0;
+            text-align: center;
+            color: #333;
+            font-size: 0.65rem;
+            letter-spacing: 3px;
+        }
+
+        .svg-filters {
+            position: absolute;
+            visibility: hidden;
+            width: 0;
+            height: 0;
+        }
     </style>
 </head>
 
