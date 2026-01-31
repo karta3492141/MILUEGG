@@ -2476,7 +2476,17 @@
                     // Adjust Scale
                     lightboxState.scale = newScale;
 
-                    // If zoomed out completely, reset pan
+                    // FORCE CENTER LOGIC (Desktop):
+                    const winW = window.innerWidth;
+                    const winH = window.innerHeight;
+                    const maxPanX = (winW / 2) * (newScale - 1);
+                    const maxPanY = (winH / 2) * (newScale - 1);
+
+                    if (lightboxState.x > maxPanX) lightboxState.x = maxPanX;
+                    if (lightboxState.x < -maxPanX) lightboxState.x = -maxPanX;
+                    if (lightboxState.y > maxPanY) lightboxState.y = maxPanY;
+                    if (lightboxState.y < -maxPanY) lightboxState.y = -maxPanY;
+
                     if (newScale === 1) {
                         lightboxState.x = 0;
                         lightboxState.y = 0;
@@ -2628,9 +2638,26 @@
                     const scaleFactor = dist / pinchStart.dist;
 
                     let newScale = pinchStart.scale * scaleFactor;
-                    newScale = Math.min(Math.max(1, newScale), 5);
+                    newScale = Math.min(Math.max(1, newScale), 5); // 1x to 5x
 
                     lightboxState.scale = newScale;
+
+                    // FORCE CENTER LOGIC:
+                    // As we shrink (scale -> 1), we must limit how much we can pan.
+                    // Max pan distance is roughly 0 when scale is 1.
+                    // Ideally: MaxPan = (WindowWidth/2) * (scale - 1)
+                    const winW = window.innerWidth;
+                    const winH = window.innerHeight;
+
+                    const maxPanX = (winW / 2) * (newScale - 1);
+                    const maxPanY = (winH / 2) * (newScale - 1);
+
+                    // Clamp X and Y to force image towards center as it shrinks
+                    if (lightboxState.x > maxPanX) lightboxState.x = maxPanX;
+                    if (lightboxState.x < -maxPanX) lightboxState.x = -maxPanX;
+                    if (lightboxState.y > maxPanY) lightboxState.y = maxPanY;
+                    if (lightboxState.y < -maxPanY) lightboxState.y = -maxPanY;
+
                     if (newScale === 1) {
                         lightboxState.x = 0;
                         lightboxState.y = 0;
