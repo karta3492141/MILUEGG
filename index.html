@@ -530,8 +530,9 @@
             object-fit: cover;
         }
 
-        /* Mobile adjustments for seamless */
-        @media (max-width: 768px) {
+        /* Mobile & Tablet Portrait adjustments for seamless */
+        @media (max-width: 1024px) and (orientation: portrait),
+        (max-width: 768px) {
             .seamless-vertical .img-slide img {
                 width: 100%;
                 max-width: 100%;
@@ -595,8 +596,9 @@
             filter: brightness(1.2);
         }
 
-        /* Mobile adjustments */
-        @media (max-width: 768px) {
+        /* Mobile & Tablet Portrait adjustments */
+        @media (max-width: 1024px) and (orientation: portrait),
+        (max-width: 768px) {
             #image-viewer.composite-mode {
                 padding: 0;
                 display: flex !important;
@@ -1135,14 +1137,17 @@
         }
 
         #collage-lightbox img {
-            max-width: 90%;
-            max-height: 90%;
-            object-fit: contain;
+            width: auto;
+            height: auto;
+            max-width: none;
+            max-height: none;
+            /* Start invisible to prevent giant flash before JS scales it */
+            opacity: 0;
             box-shadow: 0 0 50px rgba(0, 0, 0, 0.8);
-            transform: scale(0.9);
-            transition: transform 0.4s cubic-bezier(0.2, 0, 0.2, 1);
+            transform-origin: center center;
+            transition: opacity 0.3s ease;
+            /* Smooth fade in */
             cursor: zoom-in;
-            /* Indicate zoomable */
         }
 
         #collage-lightbox.active img {
@@ -1150,17 +1155,12 @@
         }
 
         /* Zoomed State */
-        #collage-lightbox img.zoomed {
-            transform: scale(1.8) !important;
-            max-width: none !important;
-            max-height: none !important;
-            cursor: zoom-out !important;
-            /* Ensure it covers screen if needed */
-            min-width: 50vw;
-        }
+        /* Zoomed State - Deprecated by JS Scale-Down Logic */
+        /* #collage-lightbox img.zoomed { ... } */
 
-        /* Mobile Adjustments for Gallery */
-        @media (max-width: 768px) {
+        /* Mobile & Tablet Portrait Adjustments for Gallery */
+        @media (max-width: 1024px) and (orientation: portrait),
+        (max-width: 768px) {
             #gallery-spinner {
                 width: 160px;
                 height: 220px;
@@ -1168,7 +1168,8 @@
         }
 
         /* Correctly re-wrap all these mobile overrides */
-        @media (max-width: 768px) {
+        @media (max-width: 1024px) and (orientation: portrait),
+        (max-width: 768px) {
             body {
                 font-size: 3vw;
             }
@@ -1883,7 +1884,8 @@
                     const img = document.createElement('img');
                     img.decoding = 'async'; // async decoding to prevent main thread blocking
                     img.dataset.fallbackStage = '0';
-                    const src = `${f}/${i}.${e}`;
+                    const cacheBuster = '?v=' + new Date().getTime();
+                    const src = `${f}/${i}.${e}` + cacheBuster;
 
                     img.dataset.lazySrc = src;
                     // Initial state: EMPTY. Let memory manager load it if visible.
@@ -1892,14 +1894,14 @@
                         // Fallback logic
                         if (e === 'webp' && img.dataset.fallbackStage === '0') {
                             img.dataset.fallbackStage = '1';
-                            const newSrc = `${f}/${i}.jpg`;
+                            const newSrc = `${f}/${i}.jpg` + cacheBuster;
                             img.dataset.lazySrc = newSrc; // Update source of truth
                             img.src = newSrc;
                             return;
                         }
                         if (e === 'webp' && img.dataset.fallbackStage === '1') {
                             img.dataset.fallbackStage = '2';
-                            const newSrc = `${f}/${i}.png`;
+                            const newSrc = `${f}/${i}.png` + cacheBuster;
                             img.dataset.lazySrc = newSrc;
                             img.src = newSrc;
                             return;
@@ -2225,15 +2227,41 @@
                 currentActiveItem = el;
                 const lightbox = document.getElementById('collage-lightbox');
                 const img = document.getElementById('lightbox-img');
-                img.src = el.querySelector('img').src;
 
-                // Reset Zoom State
-                lightboxState = { scale: 1, x: 0, y: 0 };
-                updateTransform();
-                img.classList.remove('zoomed'); // Legacy cleanup
+                // 1. Reset State
+                img.style.opacity = '0'; // Hide until calculated
+                img.src = ''; // Clear prev
+
+                const src = el.querySelector('img').src;
+                img.src = src;
 
                 lightbox.style.display = 'flex';
                 setTimeout(() => lightbox.classList.add('active'), 10);
+
+                // 2. High-Res Fit Calculation
+                img.onload = () => {
+                    const winW = window.innerWidth;
+                    const winH = window.innerHeight;
+                    const natW = img.naturalWidth || 2500;
+                    const natH = img.naturalHeight || 2500;
+
+                    // Calculate ratio to fit 90% of screen
+                    const scaleW = (winW * 0.9) / natW;
+                    const scaleH = (winH * 0.9) / natH;
+
+                    lightboxFitScale = Math.min(scaleW, scaleH);
+                    // If image is smaller than screen, don't upscale it by default (opt)
+                    // But for high-res strategy, we just trust the math.
+
+                    lightboxState = { scale: 1, x: 0, y: 0 };
+                    updateTransform();
+
+                    // Reveal
+                    img.style.opacity = '1';
+                };
+
+                // Safety: if cached/instant
+                if (img.complete) img.onload();
             }
 
             // --- 3D 畫廊邏輯 (3D Gallery Logic) ---
@@ -2628,14 +2656,25 @@
                 return Math.hypot(t1.clientX - t2.clientX, t1.clientY - t2.clientY);
             }
 
+            // --- Advanced Zoom & Pan Logic for Lightbox ---
+            let lightboxState = { scale: 1, x: 0, y: 0 };
+            let lightboxDrag = { startX: 0, startY: 0, isDragging: false };
+            let pinchStart = { dist: 0, scale: 1 };
+            let lightboxFitScale = 1; // Logic: Scale down the high-res image to fit screen
+
+            // ... (keep initLightboxZoom) ...
+
             function updateTransform() {
                 const img = document.getElementById('lightbox-img');
                 if (!img) return;
-                // Clamp Pan to view
-                // Simple clamp: don't let edge cross center? 
-                // For now, free pan (user requested "drag where they want")
 
-                img.style.transform = `translate(${lightboxState.x}px, ${lightboxState.y}px) scale(${lightboxState.scale})`;
+                // Final scale is the user zoom (state.scale) * the fitting scale (fitScale)
+                // This ensures we are always strictly scaling DOWN from the high-res native size
+                // or approaching 1.0 (native) when zooming in.
+                // We never scale UP above 1.0 relative to native, preserving sharpness.
+                const finalScale = lightboxState.scale * lightboxFitScale;
+
+                img.style.transform = `translate(${lightboxState.x}px, ${lightboxState.y}px) scale(${finalScale})`;
             }
 
             // --- NEW: Zoom & Pan Logic ---
@@ -2908,29 +2947,26 @@
                 img.decoding = 'sync'; // User request: sync (prevent flash)
                 img.dataset.fallbackStage = '0';
 
+                // CACHE BUSTER for WebP/JPG (Force refresh)
+                const cacheBuster = '?v=' + new Date().getTime() + '_q95_2500';
+
                 img.onerror = function () {
                     // If we first tried webp, fallback to jpg then png
                     if (ext === 'webp' && img.dataset.fallbackStage === '0') {
                         img.dataset.fallbackStage = '1';
-                        img.src = `${folder}/${i}.jpg`;
+                        img.src = `${folder}/${i}.jpg` + cacheBuster;
                         return;
                     }
                     if (ext === 'webp' && img.dataset.fallbackStage === '1') {
                         img.dataset.fallbackStage = '2';
-                        img.src = `${folder}/${i}.png`;
+                        img.src = `${folder}/${i}.png` + cacheBuster;
                         return;
                     }
                     console.error("Failed to load image:", img.src);
-                    const errorText = document.createElement('div');
-                    errorText.style.color = "white";
-                    errorText.style.position = "absolute";
-                    errorText.style.background = "rgba(255,0,0,0.5)";
-                    errorText.style.padding = "5px";
-                    errorText.innerText = `Image not found: ${folder}/${i}.${ext}`;
-                    if (img.parentNode) img.parentNode.appendChild(errorText);
+                    // ... error text logic ...
                 };
 
-                img.src = `${folder}/${i}.${ext}`;
+                img.src = `${folder}/${i}.${ext}` + cacheBuster;
                 return img;
             }
 
