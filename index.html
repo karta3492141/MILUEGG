@@ -2529,28 +2529,13 @@
                     updateTransform();
                 });
 
-                // Touch single-tap support: prevent close and toggle zoom on tap
-                let lastTouchEnd = 0;
+                // Touch single-tap: Disable tap-to-zoom (Pinch only)
                 img.addEventListener('touchend', (e) => {
+                    // Prevent default to stop 'click' event (which would trigger zoom)
+                    if (e.cancelable) e.preventDefault();
                     e.stopPropagation();
-                    const now = Date.now();
-                    // avoid double triggers
-                    if (Math.abs(now - lastTouchEnd) < 300) return;
-                    if (lightboxDrag.isDragging) return;
 
-                    // USER FIX: Gentler Zoom Levels for iPad [1 -> 1.5 -> 2.5]
-                    const levels = [1, 1.5, 2.5];
-                    const cur = lightboxState.scale || 1;
-                    let idx = levels.findIndex(l => Math.abs(cur - l) < 0.5);
-                    if (idx === -1) idx = levels.map(l => Math.abs(cur - l)).reduce((minI, x, i, arr) => x < arr[minI] ? i : minI, 0);
-                    const next = levels[(idx + 1) % levels.length];
-                    if (next === 1) {
-                        lightboxState = { scale: 1, x: 0, y: 0 };
-                    } else {
-                        lightboxState.scale = next;
-                    }
-                    updateTransform();
-                    lastTouchEnd = now;
+                    // No zoom toggle logic here. Strictly pinch-to-zoom.
                 });
 
                 // Mobile Pinch & Pan
