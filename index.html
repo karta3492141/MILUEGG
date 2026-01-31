@@ -652,14 +652,23 @@
             }
 
             .composite-item img {
-                width: 100% !important;
-                max-width: 100% !important;
-                height: auto !important;
-                /* Allow height to adjust naturally */
-                max-height: 100vw !important;
-                /* CRITICAL: Limit height to Square size (100vw) */
+                width: auto !important;
+                /* Allow width to shrink for portrait */
+                max-width: 100vw !important;
+                /* Cap width at screen edge */
+                height: 100vw !important;
+                /* FORCE EQUAL HEIGHT (Square Height) */
                 object-fit: contain;
                 padding: 0;
+                transform: none !important;
+                /* DISABLE ZOOM EFFECT */
+                transition: none !important;
+            }
+
+            /* Disable hover effects on mobile */
+            .composite-item:hover img {
+                transform: none !important;
+                filter: none !important;
             }
         }
 
