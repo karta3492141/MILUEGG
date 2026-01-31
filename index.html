@@ -493,6 +493,170 @@
             object-fit: contain;
         }
 
+        /* --- Seamless Vertical Mode --- */
+        #image-viewer.seamless-vertical {
+            overflow-y: auto !important;
+            overflow-x: hidden !important;
+            display: block !important;
+            /* Remove flex to allow normal flow */
+        }
+
+        .seamless-vertical .img-slide {
+            width: 100%;
+            height: auto;
+            min-height: 100%;
+            display: block;
+            overflow: visible;
+        }
+
+        .seamless-vertical .zoom-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            height: auto;
+            transform: none !important;
+            /* Disable zoom transform for now or handle differently */
+        }
+
+        .seamless-vertical .img-slide img {
+            display: block;
+            width: 100%;
+            max-width: 100vw;
+            /* Full width */
+            height: auto;
+            margin: 0;
+            padding: 0;
+            object-fit: cover;
+        }
+
+        /* Mobile adjustments for seamless */
+        @media (max-width: 768px) {
+            .seamless-vertical .img-slide img {
+                width: 100%;
+                max-width: 100%;
+            }
+        }
+
+        /* --- Composite Design Mode (Horizontal Strips) --- */
+        #image-viewer.composite-mode {
+            overflow-y: auto !important;
+            overflow-x: hidden !important;
+            display: flex !important;
+            flex-direction: column;
+            justify-content: center;
+            /* Center vertically if space allows */
+            align-items: center;
+            padding: 5vh 0;
+            /* Add some spacing */
+            line-height: 0;
+            /* Fix gap */
+            font-size: 0;
+            /* Fix gap */
+        }
+
+        .composite-row {
+            display: flex;
+            width: 100%;
+            max-width: 95vw;
+            /* constrain width */
+            justify-content: center;
+            margin-bottom: 0;
+            /* No gap between rows if desired, or small gap */
+            gap: 0;
+            /* Ensure no gap */
+        }
+
+        /* Second row overlap to fix sub-pixel rendering lines */
+        .composite-row+.composite-row {
+            margin-top: -1px;
+        }
+
+        .composite-item {
+            /* flex: 1;  Removed, set by JS dynamically */
+            position: relative;
+            cursor: pointer;
+            transition: 0.2s;
+            overflow: hidden;
+        }
+
+        .composite-item img {
+            width: 100%;
+            height: 100%;
+            /* Important for flex-basis 0% technique */
+            display: block;
+            object-fit: cover;
+            transition: transform 0.3s;
+        }
+
+        .composite-item:hover img {
+            transform: scale(1.05);
+            /* Zoom effect on hover */
+            filter: brightness(1.2);
+        }
+
+        /* Mobile adjustments */
+        @media (max-width: 768px) {
+            #image-viewer.composite-mode {
+                padding: 10vh 0;
+                justify-content: center;
+                /* Center vertically */
+                /* Allow horizontal scroll on rows, but lock vertical on viewer */
+                overflow-y: hidden !important;
+            }
+
+            .composite-row {
+                max-width: 100vw;
+                flex-wrap: nowrap;
+                overflow-x: auto;
+                /* Horizontal Scroll */
+                justify-content: flex-start;
+                padding-left: 5vw;
+                /* Start padding */
+                padding-right: 5vw;
+                /* End padding */
+                height: 40vh;
+                /* Fixed height for scrollable strip */
+                margin-bottom: 2vh;
+                /* Gap between top and bottom strip */
+
+                /* Hide scrollbar */
+                -ms-overflow-style: none;
+                /* IE and Edge */
+                scrollbar-width: none;
+                /* Firefox */
+
+                /* Smooth Scroll */
+                -webkit-overflow-scrolling: touch;
+            }
+
+            .composite-row::-webkit-scrollbar {
+                display: none;
+            }
+
+            .composite-row+.composite-row {
+                margin-top: 0;
+                /* Reset negative margin on mobile */
+            }
+
+            .composite-item {
+                flex: 0 0 auto !important;
+                /* Don't grow, respect content size */
+                width: auto !important;
+                /* Auto width based on image ratio */
+                height: 100%;
+                /* Match row height */
+            }
+
+            .composite-item img {
+                width: auto;
+                /* Auto width */
+                height: 100%;
+                /* Fill height */
+            }
+        }
+
+
         .back-book {
             position: fixed;
             top: 40px;
@@ -1611,13 +1775,32 @@
                 setTimeout(() => {
                     if (category === 'model') {
                         openGalleryViewer(folderName, counts[category]);
+                    } else if (category === 'design') {
+                        // Composite Design Mode with Pre-calculated Ratios (Fixes blocking/jank)
+                        const designData = {
+                            top: [
+                                { id: '1-1', r: 0.499 },
+                                { id: '1-2', r: 0.514 },
+                                { id: '1-3', r: 0.996 },
+                                { id: '1-4', r: 0.497 },
+                                { id: '1-5', r: 0.993 },
+                                { id: '1-6', r: 1.004 }
+                            ],
+                            bottom: [
+                                { id: '2-1', r: 1.151 },
+                                { id: '2-2', r: 1.636 },
+                                { id: '2-3', r: 1.139 },
+                                { id: '2-4', r: 0.498 }
+                            ]
+                        };
+                        openBook(folderName, designData, 'webp', 'composite-design');
                     } else {
                         const isMob = window.innerWidth <= 768;
                         let mode = 'single';
                         if (category === 'proposal' && !isMob) mode = 'spread';
-                        if (category === 'design' && !isMob) mode = 'vertical';
+                        // design moved to else-if above
 
-                        const ext = category === 'design' ? 'jpg' : 'webp';
+                        const ext = 'webp'; // Default
                         openBook(folderName, counts[category], ext, mode);
                         // Show Back Button explicitly for Grad projects
                     }
@@ -1689,7 +1872,7 @@
             }
 
             // 3. 左右翻頁圖片瀏覽器 (Virtual Memory Version)
-            function openBook(folder, count, ext = 'webp', mode = 'single') {
+            function openBook(folder, countOrList, ext = 'webp', mode = 'single') {
                 stopBackgroundPreload();
                 document.querySelector('.back-book').style.display = 'none';
 
@@ -1699,7 +1882,7 @@
                 // Helper: Create image with persistent data-lazy-src
                 const createVirtualImg = (f, i, e) => {
                     const img = document.createElement('img');
-                    img.decoding = 'sync';
+                    img.decoding = 'async'; // async decoding to prevent main thread blocking
                     img.dataset.fallbackStage = '0';
                     const src = `${f}/${i}.${e}`;
 
@@ -1729,6 +1912,8 @@
                 if (mode === 'spread') {
                     viewer.classList.add('spread-mode');
                     viewer.classList.remove('vertical-mode');
+                    viewer.classList.remove('seamless-vertical');
+                    viewer.classList.remove('composite-mode');
 
                     // 1. Cover
                     const coverSlide = document.createElement('div');
@@ -1740,6 +1925,8 @@
                     viewer.appendChild(coverSlide);
 
                     // 2. Spreads
+                    // countOrList should be a number for spread mode
+                    const count = typeof countOrList === 'number' ? countOrList : 0;
                     for (let i = 2; i <= count; i += 2) {
                         const slide = document.createElement('div');
                         slide.className = 'img-slide';
@@ -1753,8 +1940,86 @@
                         viewer.appendChild(slide);
                     }
 
+                } else if (mode === 'composite-design') {
+                    // --- New Composite Layout ---
+                    viewer.classList.remove('spread-mode');
+                    viewer.classList.remove('vertical-mode');
+                    viewer.classList.remove('seamless-vertical');
+                    viewer.classList.add('composite-mode');
+
+                    const data = (typeof countOrList === 'object' && !Array.isArray(countOrList)) ? countOrList : { top: [], bottom: [] };
+
+                    // Helper to create row with proportional alignment
+                    const createRow = (list) => {
+                        const row = document.createElement('div');
+                        row.className = 'composite-row';
+
+                        list.forEach((itemObj, index) => {
+                            // Support both object {id, r} and string legacy
+                            const item = itemObj.id || itemObj;
+                            const ratio = itemObj.r || 1.5; // Default fallback
+
+                            const wrapper = document.createElement('div');
+                            wrapper.className = 'composite-item';
+
+                            // Instant Layout (No wait for onload)
+                            if (window.innerWidth <= 768) {
+                                // Mobile: handled by CSS (flex: 0 0 auto)
+                            } else {
+                                wrapper.style.flex = `${ratio} 0 0%`;
+                            }
+
+                            const img = createVirtualImg(folder, item, ext);
+                            // Lazy Load Logic: Eager load first 2 items (for safety), others lazy
+                            if (index < 2) {
+                                img.loading = 'eager';
+                            } else {
+                                img.loading = 'lazy';
+                            }
+
+                            img.src = img.dataset.lazySrc;
+
+                            wrapper.appendChild(img);
+                            row.appendChild(wrapper);
+
+                            // Click to open lightbox
+                            wrapper.onclick = (e) => {
+                                e.stopPropagation();
+                                openCollageLightbox(wrapper);
+                            };
+                        });
+                        return row;
+                    };
+
+                    if (data.top && data.top.length > 0) viewer.appendChild(createRow(data.top));
+                    if (data.bottom && data.bottom.length > 0) viewer.appendChild(createRow(data.bottom));
+
+                } else if (mode === 'seamless-vertical') {
+                    // ... (Keep existing seamless logic or leave as fallback)
+                    viewer.classList.remove('spread-mode');
+                    viewer.classList.remove('vertical-mode');
+                    viewer.classList.remove('composite-mode');
+                    viewer.classList.add('seamless-vertical');
+
+                    // ... (Implementation remains similar if needed, or repurposed)
+                    const slide = document.createElement('div');
+                    slide.className = 'img-slide';
+                    const wrapper = document.createElement('div');
+                    wrapper.className = 'zoom-wrapper';
+
+                    const list = Array.isArray(countOrList) ? countOrList : [];
+                    list.forEach(item => {
+                        const img = createVirtualImg(folder, item, ext);
+                        img.src = img.dataset.lazySrc;
+                        wrapper.appendChild(img);
+                    });
+                    slide.appendChild(wrapper);
+                    viewer.appendChild(slide);
+
                 } else if (mode === 'vertical') {
                     viewer.classList.remove('spread-mode');
+                    viewer.classList.remove('seamless-vertical');
+                    viewer.classList.remove('composite-mode');
                     viewer.classList.add('vertical-mode');
 
                     const slide = document.createElement('div');
@@ -1763,6 +2028,7 @@
                     wrapper.className = 'zoom-wrapper';
 
                     // Load all for vertical (small count assumption)
+                    const count = typeof countOrList === 'number' ? countOrList : 0;
                     for (let i = 1; i <= count; i++) {
                         const img = createVirtualImg(folder, i, ext);
                         img.src = img.dataset.lazySrc;
@@ -1775,7 +2041,9 @@
                     // Single Mode
                     viewer.classList.remove('spread-mode');
                     viewer.classList.remove('vertical-mode');
+                    viewer.classList.remove('seamless-vertical');
 
+                    const count = typeof countOrList === 'number' ? countOrList : 0;
                     for (let i = 1; i <= count; i++) {
                         const slide = document.createElement('div');
                         slide.className = 'img-slide';
@@ -1802,7 +2070,11 @@
                 overlay.style.display = 'block';
                 setTimeout(() => overlay.classList.add('active'), 10);
                 document.body.style.overflow = 'hidden';
-                viewer.scrollLeft = 0;
+                if (mode !== 'seamless-vertical' && mode !== 'composite-design') {
+                    viewer.scrollLeft = 0;
+                } else {
+                    viewer.scrollTop = 0; // Reset vertical scroll
+                }
             }
 
             // --- 照片牆邏輯 (Collage Logic) ---
