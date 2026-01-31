@@ -2537,7 +2537,9 @@
                     // avoid double triggers
                     if (Math.abs(now - lastTouchEnd) < 300) return;
                     if (lightboxDrag.isDragging) return;
-                    const levels = [1, 2, 4];
+
+                    // USER FIX: Gentler Zoom Levels for iPad [1 -> 1.5 -> 2.5]
+                    const levels = [1, 1.5, 2.5];
                     const cur = lightboxState.scale || 1;
                     let idx = levels.findIndex(l => Math.abs(cur - l) < 0.5);
                     if (idx === -1) idx = levels.map(l => Math.abs(cur - l)).reduce((minI, x, i, arr) => x < arr[minI] ? i : minI, 0);
@@ -2562,18 +2564,31 @@
             let lastTouchX = 0, lastTouchY = 0;
 
             function onTouchStart(e) {
+                const img = document.getElementById('lightbox-img');
                 if (e.touches.length === 1) {
                     // Pan Start
                     if (lightboxState.scale > 1) {
                         lightboxDrag.isDragging = true;
                         lastTouchX = e.touches[0].clientX;
                         lastTouchY = e.touches[0].clientY;
+
+                        // PERF: Instant Drag
+                        if (img) {
+                            img.style.transition = 'none';
+                            img.style.willChange = 'transform';
+                        }
                     }
                 } else if (e.touches.length === 2) {
                     // Pinch Start
                     lightboxDrag.isDragging = false; // Stop panning
                     const dist = getDist(e.touches[0], e.touches[1]);
                     pinchStart = { dist: dist, scale: lightboxState.scale };
+
+                    // PERF: Instant Pinch
+                    if (img) {
+                        img.style.transition = 'none';
+                        img.style.willChange = 'transform';
+                    }
                 }
             }
 
@@ -2590,7 +2605,7 @@
                     lastTouchX = e.touches[0].clientX;
                     lastTouchY = e.touches[0].clientY;
 
-                    updateTransform();
+                    requestAnimationFrame(() => updateTransform());
 
                 } else if (e.touches.length === 2) {
                     // Pinch Move
@@ -2606,13 +2621,18 @@
                         lightboxState.x = 0;
                         lightboxState.y = 0;
                     }
-                    updateTransform();
+                    requestAnimationFrame(() => updateTransform());
                 }
             }
 
             function onTouchEnd(e) {
+                const img = document.getElementById('lightbox-img');
                 if (e.touches.length < 2) {
-                    // reset pinch logic?
+                    // End of interaction (Restore transition)
+                    if (img) {
+                        img.style.transition = '';
+                        setTimeout(() => { img.style.willChange = 'auto'; }, 100);
+                    }
                 }
                 if (e.touches.length === 0) {
                     lightboxDrag.isDragging = false;
