@@ -1766,7 +1766,7 @@
                     'book': 24,
                     'model': 21,
                     'design': 2,
-                    'proposal': 68
+                    'proposal': 67
                 };
 
                 const folderName = `grad_${category}`;
@@ -1797,10 +1797,15 @@
                     } else {
                         const isMob = window.innerWidth <= 768;
                         let mode = 'single';
-                        if (category === 'proposal' && !isMob) mode = 'spread';
+                        let ext = 'webp';
+
+                        if (category === 'proposal') {
+                            if (!isMob) mode = 'spread';
+                            ext = 'jpg'; // User replaced with JPG
+                        }
+
                         // design moved to else-if above
 
-                        const ext = 'webp'; // Default
                         openBook(folderName, counts[category], ext, mode);
                         // Show Back Button explicitly for Grad projects
                     }
@@ -3074,7 +3079,7 @@
                 const gradFolders = [
                     { folder: 'grad_design', count: 2, ext: 'jpg' },
                     { folder: 'grad_model', count: 21, ext: 'webp' },
-                    { folder: 'grad_proposal', count: 68, ext: 'webp' },
+                    { folder: 'grad_proposal', count: 67, ext: 'jpg' },
                     { folder: 'grad_book', count: 24, ext: 'webp' }
                 ];
 
@@ -3248,7 +3253,7 @@
                 const gradFolders = [
                     // Design already fully loaded (count=2)
                     { folder: 'grad_model', count: 21, ext: 'webp' },
-                    { folder: 'grad_proposal', count: 68, ext: 'webp' },
+                    { folder: 'grad_proposal', count: 67, ext: 'jpg' },
                     { folder: 'grad_book', count: 24, ext: 'webp' }
                 ];
 
