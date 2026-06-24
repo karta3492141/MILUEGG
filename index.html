@@ -1531,8 +1531,6 @@
             z-index: 4010;
             background: rgba(0, 0, 0, 0.5);
             border-radius: 8px;
-            backdrop-filter: blur(5px);
-            -webkit-backdrop-filter: blur(5px);
             opacity: 0;
             transition: opacity 0.4s ease;
             pointer-events: none;
@@ -2324,20 +2322,27 @@
                     const slides = viewer.querySelectorAll('.img-slide:not(.next-project-slide)');
                     const thumbs = thumbBar.querySelectorAll('.thumb-item');
                     
+                    let activeIndex = -1;
+                    const barWidth = thumbBar.clientWidth || window.innerWidth * 0.8;
+                    
                     const thumbObserver = new IntersectionObserver((entries) => {
+                        let needsScroll = false;
                         entries.forEach(entry => {
                             if (entry.isIntersecting) {
                                 const index = Array.from(slides).indexOf(entry.target);
-                                if (index !== -1 && thumbs[index]) {
-                                    thumbs.forEach(t => t.classList.remove('active'));
+                                if (index !== -1 && index !== activeIndex && thumbs[index]) {
+                                    if (activeIndex !== -1 && thumbs[activeIndex]) thumbs[activeIndex].classList.remove('active');
                                     thumbs[index].classList.add('active');
-                                    // Scroll thumbnail bar to keep active thumb in view
-                                    const thumbLeft = thumbs[index].offsetLeft;
-                                    const barWidth = thumbBar.clientWidth;
-                                    thumbBar.scrollTo({ left: thumbLeft - barWidth/2 + 40, behavior: 'smooth' });
+                                    activeIndex = index;
+                                    needsScroll = true;
                                 }
                             }
                         });
+                        if (needsScroll && thumbs[activeIndex]) {
+                            const thumbLeft = thumbs[activeIndex].offsetLeft;
+                            // Use auto instead of smooth to avoid jank when the user is rapidly scrolling
+                            thumbBar.scrollTo({ left: thumbLeft - barWidth/2 + 40, behavior: 'auto' });
+                        }
                     }, { root: viewer, threshold: 0.5 }); // 50% visible means it's active
 
                     slides.forEach(slide => thumbObserver.observe(slide));
