@@ -1526,7 +1526,6 @@
             display: flex;
             gap: 10px;
             overflow-x: auto;
-            scroll-behavior: smooth;
             padding: 10px;
             z-index: 4010;
             background: rgba(0, 0, 0, 0.5);
@@ -1551,13 +1550,24 @@
             }
         }
 
-        /* 隱藏原生捲軸 */
+        /* 自訂細長捲軸 */
         #thumbnail-bar::-webkit-scrollbar {
-            display: none;
+            height: 6px;
+        }
+        #thumbnail-bar::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+        }
+        #thumbnail-bar::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.4);
+            border-radius: 4px;
+        }
+        #thumbnail-bar::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.6);
         }
         #thumbnail-bar {
-            -ms-overflow-style: none;
-            scrollbar-width: none;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(255, 255, 255, 0.4) rgba(255, 255, 255, 0.1);
         }
 
         .thumb-item {
@@ -2302,7 +2312,15 @@
                                 thumb.appendChild(tImg);
                                 
                                 thumb.onclick = () => {
-                                    viewer.scrollTo({ left: slide.offsetLeft, behavior: 'smooth' });
+                                    // Prevent massive lag: if jumping far, use instant scroll so intermediate images aren't lazy-loaded
+                                    const currentActive = thumbBar.querySelector('.thumb-item.active');
+                                    const currentIndex = currentActive ? Array.from(thumbBar.children).indexOf(currentActive) : 0;
+                                    const jumpDistance = Math.abs(index - currentIndex);
+                                    
+                                    viewer.scrollTo({ 
+                                        left: slide.offsetLeft, 
+                                        behavior: jumpDistance > 2 ? 'auto' : 'smooth' 
+                                    });
                                 };
                                 thumbBar.appendChild(thumb);
                             }
