@@ -1515,28 +1515,38 @@
             .next-subtitle { font-size: 10px; margin-bottom: 10px; }
             .next-title { font-size: 18px; }
         }
-        /* --- NEW: 底部縮圖列 (Thumbnail Bar) --- */
+        /* --- NEW: 底部縮圖列 (Thumbnail Bar) 觸發區 --- */
+        #thumbnail-hover-zone {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 15vh; /* Hover bottom 15% of screen */
+            z-index: 4010;
+        }
+
         #thumbnail-bar {
             position: absolute;
             bottom: 1.5vw;
             left: 50%;
-            transform: translateX(-50%);
+            transform: translateX(-50%) translateY(20px);
             width: 80%;
             max-width: 1200px;
             display: flex;
             gap: 10px;
             overflow-x: auto;
             padding: 10px;
-            z-index: 4010;
-            background: rgba(0, 0, 0, 0.5);
+            background: rgba(0, 0, 0, 0.7);
             border-radius: 8px;
             opacity: 0;
-            transition: opacity 0.4s ease;
+            transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1);
             pointer-events: none;
         }
 
-        #book-overlay.active:hover #thumbnail-bar {
+        #thumbnail-hover-zone:hover #thumbnail-bar,
+        #thumbnail-hover-zone.hint-active #thumbnail-bar {
             opacity: 1;
+            transform: translateX(-50%) translateY(0);
             pointer-events: auto;
         }
 
@@ -1579,7 +1589,9 @@
             overflow: hidden;
             cursor: pointer;
             opacity: 0.4;
-            transition: all 0.3s ease;
+            transition: transform 0.2s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.2s ease, border-color 0.2s ease;
+            will-change: transform, opacity;
+            transform: scale(1) translateZ(0); /* 硬體加速 */
             border: 1px solid transparent;
             display: flex;
             justify-content: center;
@@ -1594,7 +1606,7 @@
         .thumb-item:hover, .thumb-item.active {
             opacity: 1;
             border-color: #fff;
-            transform: scale(1.05);
+            transform: scale(1.05) translateZ(0);
         }
     </style>
 </head>
@@ -1778,7 +1790,9 @@
             <div class="nav-arrow prev-arrow" onclick="moveSlide(-1)">❮</div>
             <div class="nav-arrow next-arrow" onclick="moveSlide(1)">❯</div>
             <div id="image-viewer"></div>
-            <div id="thumbnail-bar"></div>
+            <div id="thumbnail-hover-zone">
+                <div id="thumbnail-bar"></div>
+            </div>
         </div>
 
         <div id="gallery-overlay">
@@ -1968,45 +1982,42 @@
                 const folderName = `grad_${category}`;
 
                 toggleGradMenu(false); // Close menu
-                setTimeout(() => {
-                    if (category === 'model') {
-                        openGalleryViewer(folderName, counts[category]);
-                    } else if (category === 'design') {
-                        // Composite Design Mode with Pre-calculated Ratios (Fixes blocking/jank)
-                        const designData = {
-                            top: [
-                                { id: '1-1', r: 0.499 },
-                                { id: '1-2', r: 0.514 },
-                                { id: '1-3', r: 0.996 },
-                                { id: '1-4', r: 0.497 },
-                                { id: '1-5', r: 0.993 },
-                                { id: '1-6', r: 1.004 }
-                            ],
-                            bottom: [
-                                { id: '2-1', r: 1.151 },
-                                { id: '2-2', r: 1.636 },
-                                { id: '2-3', r: 1.139 },
-                                { id: '2-4', r: 0.498 }
-                            ]
-                        };
-                        openBook(folderName, designData, 'webp', 'composite-design');
-                    } else {
-                        const isMob = window.innerWidth <= 768;
-                        let mode = 'single';
-                        let ext = 'webp';
+                
+                if (category === 'model') {
+                    openGalleryViewer(folderName, counts[category]);
+                } else if (category === 'design') {
+                    // Composite Design Mode with Pre-calculated Ratios (Fixes blocking/jank)
+                    const designData = {
+                        top: [
+                            { id: '1-1', r: 0.499 },
+                            { id: '1-2', r: 0.514 },
+                            { id: '1-3', r: 0.996 },
+                            { id: '1-4', r: 0.497 },
+                            { id: '1-5', r: 0.993 },
+                            { id: '1-6', r: 1.004 }
+                        ],
+                        bottom: [
+                            { id: '2-1', r: 1.151 },
+                            { id: '2-2', r: 1.636 },
+                            { id: '2-3', r: 1.139 },
+                            { id: '2-4', r: 0.498 }
+                        ]
+                    };
+                    openBook(folderName, designData, 'webp', 'composite-design');
+                } else {
+                    const isMob = window.innerWidth <= 768;
+                    let mode = 'single';
+                    let ext = 'webp';
 
-                        if (category === 'proposal') {
-                            if (!isMob) mode = 'spread';
-                            ext = 'jpg'; // User replaced with JPG
-                        }
-
-                        // design moved to else-if above
-
-                        openBook(folderName, counts[category], ext, mode);
-                        // Show Back Button explicitly for Grad projects
+                    if (category === 'proposal') {
+                        if (!isMob) mode = 'spread';
+                        ext = 'jpg'; // User replaced with JPG
                     }
-                    document.querySelectorAll('.back-book').forEach(el => el.style.display = 'block');
-                }, 300);
+
+                    openBook(folderName, counts[category], ext, mode);
+                    // Show Back Button explicitly for Grad projects
+                }
+                document.querySelectorAll('.back-book').forEach(el => el.style.display = 'block');
             }
 
             // --- Active Memory Manager (Virtualization) ---
@@ -2022,22 +2033,34 @@
             function initMemoryManager(viewer) {
                 if (memManagerInterval) clearInterval(memManagerInterval);
 
+                const slides = Array.from(viewer.querySelectorAll('.img-slide'));
+                const slideImgs = slides.map(slide => Array.from(slide.querySelectorAll('img')));
+                let cachedWidth = viewer.offsetWidth;
+                
+                // Use ResizeObserver to update width without querying DOM during scroll
+                const resizeObserver = new ResizeObserver(entries => {
+                    for (let entry of entries) {
+                        cachedWidth = entry.contentRect.width;
+                    }
+                });
+                resizeObserver.observe(viewer);
+                // Attach observer to viewer so we can disconnect it if needed later
+                if (viewer.resizeObserver) viewer.resizeObserver.disconnect();
+                viewer.resizeObserver = resizeObserver;
+
                 const updateVisibility = () => {
                     const scrollLeft = viewer.scrollLeft;
-                    const width = viewer.offsetWidth;
-                    if (width === 0) return; // invisible
+                    if (cachedWidth === 0) return; // invisible
 
-                    const currentIndex = Math.round(scrollLeft / width);
+                    const currentIndex = Math.round(scrollLeft / cachedWidth);
 
                     // SAFE ZONE: Current +/- 1 slide. 
-                    // Everything else MUST be unloaded to save memory (35MP images = ~130MB RAM each)
+                    // Everything else MUST be unloaded to save memory
                     const minIdx = currentIndex - 1;
                     const maxIdx = currentIndex + 1;
 
-                    const slides = viewer.querySelectorAll('.img-slide');
                     slides.forEach((slide, idx) => {
-                        const imgs = slide.querySelectorAll('img');
-
+                        const imgs = slideImgs[idx];
                         if (idx >= minIdx && idx <= maxIdx) {
                             // LOAD
                             imgs.forEach(img => {
@@ -2312,11 +2335,14 @@
                                 thumb.appendChild(tImg);
                                 
                                 thumb.onclick = () => {
-                                    // Prevent massive lag: if jumping far, use instant scroll so intermediate images aren't lazy-loaded
-                                    const currentActive = thumbBar.querySelector('.thumb-item.active');
-                                    const currentIndex = currentActive ? Array.from(thumbBar.children).indexOf(currentActive) : 0;
-                                    const jumpDistance = Math.abs(index - currentIndex);
-                                    
+                                    // --- 1. Immediate Visual Feedback ---
+                                    Array.from(thumbBar.children).forEach(t => t.classList.remove('active'));
+                                    thumb.classList.add('active');
+                                    const bw = thumbBar.clientWidth || window.innerWidth * 0.8;
+                                    thumbBar.scrollTo({ left: thumb.offsetLeft - bw/2 + 40, behavior: 'smooth' });
+
+                                    // --- 2. Scroll Main Viewer ---
+                                    const jumpDistance = Math.abs(index - (viewer.activeIndex || 0));
                                     viewer.scrollTo({ 
                                         left: slide.offsetLeft, 
                                         behavior: jumpDistance > 2 ? 'auto' : 'smooth' 
@@ -2348,16 +2374,18 @@
                         entries.forEach(entry => {
                             if (entry.isIntersecting) {
                                 const index = Array.from(slides).indexOf(entry.target);
-                                if (index !== -1 && index !== activeIndex && thumbs[index]) {
-                                    if (activeIndex !== -1 && thumbs[activeIndex]) thumbs[activeIndex].classList.remove('active');
+                                if (index !== -1 && index !== viewer.activeIndex && thumbs[index]) {
+                                    if (viewer.activeIndex !== undefined && viewer.activeIndex !== -1 && thumbs[viewer.activeIndex]) {
+                                        thumbs[viewer.activeIndex].classList.remove('active');
+                                    }
                                     thumbs[index].classList.add('active');
-                                    activeIndex = index;
+                                    viewer.activeIndex = index;
                                     needsScroll = true;
                                 }
                             }
                         });
-                        if (needsScroll && thumbs[activeIndex]) {
-                            const thumbLeft = thumbs[activeIndex].offsetLeft;
+                        if (needsScroll && thumbs[viewer.activeIndex]) {
+                            const thumbLeft = thumbs[viewer.activeIndex].offsetLeft;
                             // Use auto instead of smooth to avoid jank when the user is rapidly scrolling
                             thumbBar.scrollTo({ left: thumbLeft - barWidth/2 + 40, behavior: 'auto' });
                         }
@@ -2369,9 +2397,19 @@
                     viewer.thumbObserver = thumbObserver;
                 }
 
+                // Show initial hint for thumbnail bar (auto-hides after 2.5 seconds)
+                const hoverZone = document.getElementById('thumbnail-hover-zone');
+                if (hoverZone && thumbBar && thumbBar.style.display !== 'none') {
+                    hoverZone.classList.add('hint-active');
+                    if (hoverZone.hintTimeout) clearTimeout(hoverZone.hintTimeout);
+                    hoverZone.hintTimeout = setTimeout(() => {
+                        hoverZone.classList.remove('hint-active');
+                    }, 2500);
+                }
+
                 const overlay = document.getElementById('book-overlay');
                 overlay.style.display = 'block';
-                setTimeout(() => requestAnimationFrame(() => overlay.classList.add('active')), 80);
+                requestAnimationFrame(() => requestAnimationFrame(() => overlay.classList.add('active')));
                 document.body.style.overflow = 'hidden';
                 if (mode !== 'seamless-vertical' && mode !== 'composite-design') {
                     viewer.scrollLeft = 0;
@@ -2396,7 +2434,7 @@
 
                 // Show overlay
                 overlay.style.display = 'block';
-                setTimeout(() => requestAnimationFrame(() => overlay.classList.add('active')), 80);
+                requestAnimationFrame(() => requestAnimationFrame(() => overlay.classList.add('active')));
                 document.body.style.overflow = 'hidden';
 
                 const isMob = window.innerWidth < 768;
@@ -2581,7 +2619,7 @@
 
                 // Show overlay
                 overlay.style.display = 'block';
-                setTimeout(() => requestAnimationFrame(() => overlay.classList.add('active')), 80);
+                requestAnimationFrame(() => requestAnimationFrame(() => overlay.classList.add('active')));
                 document.body.style.overflow = 'hidden';
 
                 // Calculate Radius
